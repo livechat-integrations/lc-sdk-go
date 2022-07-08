@@ -6,7 +6,6 @@ import (
 
 	"github.com/livechat/lc-sdk-go/v5/agent"
 	"github.com/livechat/lc-sdk-go/v5/authorization"
-	"github.com/livechat/lc-sdk-go/v5/objects"
 	"github.com/livechat/lc-sdk-go/v5/webhooks"
 )
 
@@ -44,8 +43,8 @@ func (h *IncomingEventHandler) Handle(ctx context.Context, wh *webhooks.Webhook)
 		return errors.New("agent-api initilization failed")
 	}
 
-	msg := &objects.Message{
-		Event: objects.Event{
+	msg := &agent.Message{
+		Event: agent.Event{
 			Type:       "message",
 			Visibility: "all",
 		},

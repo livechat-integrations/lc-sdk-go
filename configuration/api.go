@@ -1,12 +1,11 @@
 package configuration
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 
 	"github.com/livechat/lc-sdk-go/v5/authorization"
 	i "github.com/livechat/lc-sdk-go/v5/internal"
-	"github.com/livechat/lc-sdk-go/v5/objects"
 )
 
 type configurationAPI interface {
@@ -319,7 +318,7 @@ func (a *API) GetGroup(id int, fields ...string) (*Group, error) {
 func validateBotGroupsAssignment(groups []*GroupConfig) error {
 	for _, group := range groups {
 		if group.Priority == DoNotAssign {
-			return fmt.Errorf("DoNotAssign priority is allowed only as default group priority")
+			return errors.New("DoNotAssign priority is allowed only as default group priority")
 		}
 	}
 
@@ -327,8 +326,8 @@ func validateBotGroupsAssignment(groups []*GroupConfig) error {
 }
 
 // ListLicenseProperties returns the properties set within a license.
-func (a *API) ListLicenseProperties(namespacePrefix, namePrefix string) (objects.Properties, error) {
-	var resp objects.Properties
+func (a *API) ListLicenseProperties(namespacePrefix, namePrefix string) (Properties, error) {
+	var resp Properties
 	err := a.Call("list_license_properties", &listLicensePropertiesRequest{
 		NamespacePrefix: namespacePrefix,
 		NamePrefix:      namePrefix,
@@ -337,8 +336,8 @@ func (a *API) ListLicenseProperties(namespacePrefix, namePrefix string) (objects
 }
 
 // ListGroupProperties returns the properties set within a group.
-func (a *API) ListGroupProperties(groupID uint, namespacePrefix, namePrefix string) (objects.Properties, error) {
-	var resp objects.Properties
+func (a *API) ListGroupProperties(groupID uint, namespacePrefix, namePrefix string) (Properties, error) {
+	var resp Properties
 	err := a.Call("list_group_properties", &listGroupPropertiesRequest{
 		ID:              groupID,
 		NamespacePrefix: namespacePrefix,
@@ -398,14 +397,14 @@ func (a *API) GetLicenseWebhooksState(opts *ManageWebhooksStateOptions) (*Webhoo
 }
 
 // UpdateLicenseProperties updates the properties set within a license.
-func (a *API) UpdateLicenseProperties(props objects.Properties) error {
+func (a *API) UpdateLicenseProperties(props Properties) error {
 	return a.Call("update_license_properties", &updateLicensePropertiesRequest{
 		Properties: props,
 	}, &emptyResponse{})
 }
 
 // UpdateGroupProperties updates the properties set within a group.
-func (a *API) UpdateGroupProperties(id int, props objects.Properties) error {
+func (a *API) UpdateGroupProperties(id int, props Properties) error {
 	return a.Call("update_group_properties", &updateGroupPropertiesRequest{
 		ID:         id,
 		Properties: props,

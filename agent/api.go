@@ -7,7 +7,6 @@ import (
 
 	"github.com/livechat/lc-sdk-go/v5/authorization"
 	i "github.com/livechat/lc-sdk-go/v5/internal"
-	"github.com/livechat/lc-sdk-go/v5/objects"
 )
 
 type agentAPI interface {
@@ -42,7 +41,7 @@ func (a *API) SetAuthorID(authorID string) {
 }
 
 // ListChats returns chat summaries list.
-func (a *API) ListChats(filters *chatsFilters, sortOrder, pageID string, limit uint) (summary []objects.ChatSummary, found uint, previousPage, nextPage string, err error) {
+func (a *API) ListChats(filters *chatsFilters, sortOrder, pageID string, limit uint) (summary []ChatSummary, found uint, previousPage, nextPage string, err error) {
 	var resp listChatsResponse
 	err = a.Call("list_chats", &listChatsRequest{
 		Filters: filters,
@@ -68,7 +67,7 @@ func (a *API) GetChat(chatID string, threadID string) (Chat, error) {
 }
 
 // ListChats returns threads list.
-func (a *API) ListThreads(chatID, sortOrder, pageID string, limit, minEventsCount uint, filters *threadsFilters) (threads []objects.Thread, found uint, previousPage, nextPage string, err error) {
+func (a *API) ListThreads(chatID, sortOrder, pageID string, limit, minEventsCount uint, filters *threadsFilters) (threads []Thread, found uint, previousPage, nextPage string, err error) {
 	var resp listThreadsResponse
 	err = a.Call("list_threads", &listThreadsRequest{
 		ChatID: chatID,
@@ -201,7 +200,7 @@ func (a *API) RemoveUserFromChat(chatID, userID, userType string, ignoreRequeste
 //
 // Supported event types are: event, message, system_message and file.
 func (a *API) SendEvent(chatID string, event interface{}, attachToLastThread bool) (string, error) {
-	if err := objects.ValidateEvent(event); err != nil {
+	if err := ValidateEvent(event); err != nil {
 		return "", err
 	}
 
@@ -229,7 +228,7 @@ func (a *API) SendRichMessagePostback(chatID, eventID, threadID, postbackID stri
 }
 
 // UpdateChatProperties updates given chat's properties.
-func (a *API) UpdateChatProperties(chatID string, properties objects.Properties) error {
+func (a *API) UpdateChatProperties(chatID string, properties Properties) error {
 	return a.Call("update_chat_properties", &updateChatPropertiesRequest{
 		ID:         chatID,
 		Properties: properties,
@@ -245,7 +244,7 @@ func (a *API) DeleteChatProperties(chatID string, properties map[string][]string
 }
 
 // UpdateThreadProperties updates given thread's properties.
-func (a *API) UpdateThreadProperties(chatID, threadID string, properties objects.Properties) error {
+func (a *API) UpdateThreadProperties(chatID, threadID string, properties Properties) error {
 	return a.Call("update_thread_properties", &updateThreadPropertiesRequest{
 		ChatID:     chatID,
 		ThreadID:   threadID,
@@ -263,7 +262,7 @@ func (a *API) DeleteThreadProperties(chatID, threadID string, properties map[str
 }
 
 // UpdateEventProperties updates given event's properties.
-func (a *API) UpdateEventProperties(chatID, threadID, eventID string, properties objects.Properties) error {
+func (a *API) UpdateEventProperties(chatID, threadID, eventID string, properties Properties) error {
 	return a.Call("update_event_properties", &updateEventPropertiesRequest{
 		ChatID:     chatID,
 		ThreadID:   threadID,
@@ -415,8 +414,8 @@ func (a *API) UnfollowCustomer(customerID string) error {
 	}, &emptyResponse{})
 }
 
-func (a *API) ListRoutingStatuses(groupIDs []int) ([]objects.AgentStatus, error) {
-	var resp []objects.AgentStatus
+func (a *API) ListRoutingStatuses(groupIDs []int) ([]AgentStatus, error) {
+	var resp []AgentStatus
 	err := a.Call("list_routing_statuses", &listRoutingStatusesRequest{
 		Filters: &routingStatusesFilter{
 			GroupIDs: groupIDs,
