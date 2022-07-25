@@ -1,5 +1,8 @@
 package configuration
 
+// Properties represents LiveChat properties in form of property_namespace -> property -> value.
+type Properties map[string]map[string]interface{}
+
 // Webhook represents webhook to be registered
 type Webhook struct {
 	Action         WebhookAction   `json:"action"`

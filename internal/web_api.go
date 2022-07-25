@@ -162,7 +162,7 @@ func NewAPIWithFileUpload(t authorization.TokenGetter, client *http.Client, clie
 func (a *fileUploadAPI) UploadFile(filename string, file []byte) (string, error) {
 	token := a.tokenGetter()
 	if token == nil {
-		return "", fmt.Errorf("couldn't get token")
+		return "", errors.New("couldn't get token")
 	}
 	start := time.Now()
 
@@ -269,10 +269,10 @@ func (a *api) send(req *http.Request, respPayload interface{}) error {
 func (a *api) getToken() (*authorization.Token, error) {
 	token := a.tokenGetter()
 	if token == nil {
-		return nil, fmt.Errorf("couldn't get token")
+		return nil, errors.New("couldn't get token")
 	}
 	if token.Type != authorization.BearerToken && token.Type != authorization.BasicToken {
-		return nil, fmt.Errorf("unsupported token type")
+		return nil, errors.New("unsupported token type")
 	}
 
 	return token, nil

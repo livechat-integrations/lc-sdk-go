@@ -54,6 +54,9 @@
 			],
 			"followed": true,
 			"online": false,
+			"group_ids": [
+				0
+			],
 			"state": "browsing"
 		},
 		"user_type": "customer",

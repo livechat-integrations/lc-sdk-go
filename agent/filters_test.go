@@ -307,12 +307,12 @@ func TestCustomersFiltersDateRangeFilterFields(t *testing.T) {
 func TestChatsFilters(t *testing.T) {
 	cf := agent.NewChatsFilters()
 	if !cf.IncludeActive {
-		t.Errorf("ChatsFilters.IncludeActive should be true by default")
+		t.Error("ChatsFilters.IncludeActive should be true by default")
 	}
 
 	cf.WithoutActiveChats().ByGroups([]uint{1})
 	if cf.IncludeActive {
-		t.Errorf("ChatsFilters.IncludeActive should be toggled to false")
+		t.Error("ChatsFilters.IncludeActive should be toggled to false")
 	}
 	if cf.GroupIDs[0] != 1 {
 		t.Errorf("ChatsFilters.GroupIDs invalid: %v", cf.GroupIDs)

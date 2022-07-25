@@ -1,7 +1,5 @@
 package configuration
 
-import "github.com/livechat/lc-sdk-go/v4/objects"
-
 type registerWebhookRequest struct {
 	*Webhook
 	OwnerClientID string `json:"owner_client_id,omitempty"`
@@ -166,12 +164,12 @@ type manageWebhooksStateRequest struct {
 }
 
 type updateLicensePropertiesRequest struct {
-	Properties objects.Properties `json:"properties"`
+	Properties Properties `json:"properties"`
 }
 
 type updateGroupPropertiesRequest struct {
-	ID         int                `json:"id"`
-	Properties objects.Properties `json:"properties"`
+	ID         int        `json:"id"`
+	Properties Properties `json:"properties"`
 }
 
 type deleteLicensePropertiesRequest struct {

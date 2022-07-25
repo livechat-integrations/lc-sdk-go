@@ -7,7 +7,6 @@ import (
 
 	"github.com/livechat/lc-sdk-go/v4/authorization"
 	i "github.com/livechat/lc-sdk-go/v4/internal"
-	"github.com/livechat/lc-sdk-go/v4/objects"
 )
 
 type customerAPI interface {
@@ -47,7 +46,7 @@ func NewAPI(t authorization.TokenGetter, client *http.Client, clientID string) (
 
 // StartChat starts new chat with access, properties and initial thread as defined in initialChat.
 // It returns respectively chat ID, thread ID and initial event IDs (except for server-generated events).
-func (a *API) StartChat(initialChat *objects.InitialChat, continuous, active bool) (chatID, threadID string, eventIDs []string, err error) {
+func (a *API) StartChat(initialChat *InitialChat, continuous, active bool) (chatID, threadID string, eventIDs []string, err error) {
 	req := &startChatRequest{
 		Chat:       initialChat,
 		Continuous: continuous,
@@ -84,9 +83,9 @@ func (a *API) SendSystemMessage(chatID, text, messageType string, textVars map[s
 			Type:       "system_message",
 			Recipients: string(recipients),
 		},
-		Text:     text,
-		Type:     messageType,
-		TextVars: textVars,
+		Text:              text,
+		SystemMessageType: messageType,
+		TextVars:          textVars,
 	}
 
 	return a.SendEvent(chatID, &e, attachToLastThread)
@@ -114,7 +113,7 @@ func (a *API) SendEvent(chatID string, e interface{}, attachToLastThread bool) (
 // ResumeChat resumes chat initialChat.ID with access, properties and initial thread
 // as defined in initialChat.
 // It returns respectively thread ID and initial event IDs (except for server-generated events).
-func (a *API) ResumeChat(initialChat *objects.InitialChat, continuous, active bool) (threadID string, eventIDs []string, err error) {
+func (a *API) ResumeChat(initialChat *InitialChat, continuous, active bool) (threadID string, eventIDs []string, err error) {
 	var resp resumeChatResponse
 
 	if err := initialChat.Validate(); err != nil {
@@ -131,7 +130,7 @@ func (a *API) ResumeChat(initialChat *objects.InitialChat, continuous, active bo
 }
 
 // ListChats returns chat summaries list.
-func (a *API) ListChats(sortOrder, pageID string, limit uint) (summary []objects.ChatSummary, total uint, previousPage, nextPage string, err error) {
+func (a *API) ListChats(sortOrder, pageID string, limit uint) (summary []ChatSummary, total uint, previousPage, nextPage string, err error) {
 	var resp listChatsResponse
 	err = a.Call("list_chats", &listChatsRequest{
 		hashedPaginationRequest: &hashedPaginationRequest{
@@ -145,8 +144,8 @@ func (a *API) ListChats(sortOrder, pageID string, limit uint) (summary []objects
 }
 
 // GetChat returns given thread for given chat.
-func (a *API) GetChat(chatID string, threadID string) (objects.Chat, error) {
-	var resp objects.Chat
+func (a *API) GetChat(chatID string, threadID string) (Chat, error) {
+	var resp Chat
 	err := a.Call("get_chat", &getChatRequest{
 		ChatID:   chatID,
 		ThreadID: threadID,
@@ -156,7 +155,7 @@ func (a *API) GetChat(chatID string, threadID string) (objects.Chat, error) {
 }
 
 // ListThreads returns threads list.
-func (a *API) ListThreads(chatID, sortOrder, pageID string, limit, minEventsCount uint) (threads []objects.Thread, found uint, previousPage, nextPage string, err error) {
+func (a *API) ListThreads(chatID, sortOrder, pageID string, limit, minEventsCount uint) (threads []Thread, found uint, previousPage, nextPage string, err error) {
 	var resp listThreadsResponse
 	err = a.Call("list_threads", &listThreadsRequest{
 		ChatID: chatID,
@@ -200,7 +199,7 @@ func (a *API) SendSneakPeek(chatID, text string) error {
 }
 
 // UpdateChatProperties updates given chat's properties.
-func (a *API) UpdateChatProperties(chatID string, properties objects.Properties) error {
+func (a *API) UpdateChatProperties(chatID string, properties Properties) error {
 	return a.Call("update_chat_properties", &updateChatPropertiesRequest{
 		ID:         chatID,
 		Properties: properties,
@@ -216,7 +215,7 @@ func (a *API) DeleteChatProperties(chatID string, properties map[string][]string
 }
 
 // UpdateThreadProperties updates given thread's properties.
-func (a *API) UpdateThreadProperties(chatID, threadID string, properties objects.Properties) error {
+func (a *API) UpdateThreadProperties(chatID, threadID string, properties Properties) error {
 	return a.Call("update_thread_properties", &updateThreadPropertiesRequest{
 		ChatID:     chatID,
 		ThreadID:   threadID,
@@ -234,7 +233,7 @@ func (a *API) DeleteThreadProperties(chatID, threadID string, properties map[str
 }
 
 // UpdateEventProperties updates given event's properties.
-func (a *API) UpdateEventProperties(chatID, threadID, eventID string, properties objects.Properties) error {
+func (a *API) UpdateEventProperties(chatID, threadID, eventID string, properties Properties) error {
 	return a.Call("update_event_properties", &updateEventPropertiesRequest{
 		ChatID:     chatID,
 		ThreadID:   threadID,
@@ -345,15 +344,15 @@ func (a *API) MarkEventsAsSeen(chatID string, seenUpTo time.Time) error {
 }
 
 // GetCustomer returns current Customer.
-func (a *API) GetCustomer() (*objects.Customer, error) {
-	var resp objects.Customer
+func (a *API) GetCustomer() (*Customer, error) {
+	var resp Customer
 	err := a.Call("get_customer", nil, &resp)
 	return &resp, err
 }
 
 // ListLicenseProperties returns the properties of a given license.
-func (a *API) ListLicenseProperties(namespace, name string) (objects.Properties, error) {
-	var resp objects.Properties
+func (a *API) ListLicenseProperties(namespace, name string) (Properties, error) {
+	var resp Properties
 	err := a.Call("list_license_properties", &listLicensePropertiesRequest{
 		Namespace: namespace,
 		Name:      name,
@@ -362,8 +361,8 @@ func (a *API) ListLicenseProperties(namespace, name string) (objects.Properties,
 }
 
 // ListGroupProperties returns the properties of a given group.
-func (a *API) ListGroupProperties(groupID uint, namespace, name string) (objects.Properties, error) {
-	var resp objects.Properties
+func (a *API) ListGroupProperties(groupID uint, namespace, name string) (Properties, error) {
+	var resp Properties
 	err := a.Call("list_group_properties", &listGroupPropertiesRequest{
 		ID:        groupID,
 		Namespace: namespace,
