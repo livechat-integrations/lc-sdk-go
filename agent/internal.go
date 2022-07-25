@@ -2,8 +2,6 @@ package agent
 
 import (
 	"encoding/json"
-
-	"github.com/livechat/lc-sdk-go/v3/objects"
 )
 
 type listChatsRequest struct {
@@ -13,17 +11,13 @@ type listChatsRequest struct {
 
 type listChatsResponse struct {
 	hashedPaginationResponse
-	ChatsSummary []objects.ChatSummary `json:"chats_summary"`
-	FoundChats   uint                  `json:"found_chats"`
+	ChatsSummary []ChatSummary `json:"chats_summary"`
+	FoundChats   uint          `json:"found_chats"`
 }
 
 type getChatRequest struct {
 	ChatID   string `json:"chat_id"`
 	ThreadID string `json:"thread_id,omitempty"`
-}
-
-type getChatResponse struct {
-	Chat objects.Chat `json:"chat"`
 }
 
 type listThreadsRequest struct {
@@ -35,8 +29,8 @@ type listThreadsRequest struct {
 
 type listThreadsResponse struct {
 	hashedPaginationResponse
-	Threads      []objects.Thread `json:"threads"`
-	FoundThreads uint             `json:"found_threads"`
+	Threads      []Thread `json:"threads"`
+	FoundThreads uint     `json:"found_threads"`
 }
 
 type listArchivesRequest struct {
@@ -45,7 +39,7 @@ type listArchivesRequest struct {
 }
 
 type listArchivesResponse struct {
-	Chats      []objects.Chat     `json:"chats"`
+	Chats      []Chat             `json:"chats"`
 	Pagination paginationResponse `json:"pagination"`
 }
 
@@ -86,8 +80,8 @@ type unfollowChatRequest struct {
 
 // used to grant, revoke and set chat access
 type modifyChatAccessRequest struct {
-	ID     string         `json:"id"`
-	Access objects.Access `json:"access"`
+	ID     string `json:"id"`
+	Access Access `json:"access"`
 }
 
 type transferChatRequest struct {
@@ -122,8 +116,8 @@ type sendRichMessagePostbackRequest struct {
 }
 
 type updateChatPropertiesRequest struct {
-	ID         string             `json:"id"`
-	Properties objects.Properties `json:"properties"`
+	ID         string     `json:"id"`
+	Properties Properties `json:"properties"`
 }
 
 type deleteChatPropertiesRequest struct {
@@ -132,9 +126,9 @@ type deleteChatPropertiesRequest struct {
 }
 
 type updateThreadPropertiesRequest struct {
-	ChatID     string             `json:"chat_id"`
-	ThreadID   string             `json:"thread_id"`
-	Properties objects.Properties `json:"properties"`
+	ChatID     string     `json:"chat_id"`
+	ThreadID   string     `json:"thread_id"`
+	Properties Properties `json:"properties"`
 }
 
 type deleteThreadPropertiesRequest struct {
@@ -144,10 +138,10 @@ type deleteThreadPropertiesRequest struct {
 }
 
 type updateEventPropertiesRequest struct {
-	ChatID     string             `json:"chat_id"`
-	ThreadID   string             `json:"thread_id"`
-	EventID    string             `json:"event_id"`
-	Properties objects.Properties `json:"properties"`
+	ChatID     string     `json:"chat_id"`
+	ThreadID   string     `json:"thread_id"`
+	EventID    string     `json:"event_id"`
+	Properties Properties `json:"properties"`
 }
 
 type deleteEventPropertiesRequest struct {
@@ -168,9 +162,6 @@ type getCustomersRequest struct {
 	ID string `json:"id"`
 }
 
-type getCustomersResponse struct {
-}
-
 type listCustomersRequest struct {
 	PageID    string            `json:"page_id,omitempty"`
 	Limit     uint              `json:"limit,omitempty"`
@@ -181,9 +172,9 @@ type listCustomersRequest struct {
 
 type listCustomersResponse struct {
 	hashedPaginationResponse
-	Customers        []objects.Customer `json:"customers"`
-	TotalCustomers   uint               `json:"total_customers"`
-	LimitedCustomers uint               `json:"limited_customers"`
+	Customers        []Customer `json:"customers"`
+	TotalCustomers   uint       `json:"total_customers"`
+	LimitedCustomers uint       `json:"limited_customers"`
 }
 
 type createCustomerRequest struct {
@@ -260,10 +251,6 @@ type listAgentsForTransferRequest struct {
 }
 
 type followCustomerRequest struct {
-	ID string `json:"id"`
-}
-
-type unfollowCustomerRequest struct {
 	ID string `json:"id"`
 }
 

@@ -3,6 +3,7 @@ package webhooks_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -121,10 +122,10 @@ func TestRejectWebhooksIfSecretKeyDoesntMatch(t *testing.T) {
 func TestPayloadParsingOK(t *testing.T) {
 	withLicenseCheck := func(verifier webhooks.Handler) webhooks.Handler {
 		return func(ctx context.Context, wh *webhooks.Webhook) error {
-			var errors string
-			propEq("LicenseID", wh.LicenseID, 21377312, &errors)
-			if errors != "" {
-				return fmt.Errorf(errors)
+			var propEqErrors string
+			propEq("LicenseID", wh.LicenseID, 21377312, &propEqErrors)
+			if propEqErrors != "" {
+				return errors.New(propEqErrors)
 			}
 			return verifier(ctx, wh)
 		}

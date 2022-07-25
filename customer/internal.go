@@ -1,13 +1,9 @@
 package customer
 
-import (
-	"github.com/livechat/lc-sdk-go/v3/objects"
-)
-
 type startChatRequest struct {
-	Chat       *objects.InitialChat `json:"chat,omitempty"`
-	Continuous bool                 `json:"continuous,omitempty"`
-	Active     bool                 `json:"active"`
+	Chat       *InitialChat `json:"chat,omitempty"`
+	Continuous bool         `json:"continuous,omitempty"`
+	Active     bool         `json:"active"`
 }
 
 type startChatResponse struct {
@@ -27,9 +23,9 @@ type sendEventResponse struct {
 }
 
 type resumeChatRequest struct {
-	Chat       *objects.InitialChat `json:"chat"`
-	Continuous bool                 `json:"continuous,omitempty"`
-	Active     bool                 `json:"active"`
+	Chat       *InitialChat `json:"chat"`
+	Continuous bool         `json:"continuous,omitempty"`
+	Active     bool         `json:"active"`
 }
 
 type resumeChatResponse struct {
@@ -43,17 +39,13 @@ type listChatsRequest struct {
 
 type listChatsResponse struct {
 	hashedPaginationResponse
-	ChatsSummary []objects.ChatSummary `json:"chats_summary"`
-	TotalChats   uint                  `json:"total_chats"`
+	ChatsSummary []ChatSummary `json:"chats_summary"`
+	TotalChats   uint          `json:"total_chats"`
 }
 
 type getChatRequest struct {
 	ChatID   string `json:"chat_id"`
 	ThreadID string `json:"thread_id,omitempty"`
-}
-
-type getChatResponse struct {
-	Chat objects.Chat `json:"chat"`
 }
 
 type listThreadsRequest struct {
@@ -64,8 +56,8 @@ type listThreadsRequest struct {
 
 type listThreadsResponse struct {
 	hashedPaginationResponse
-	Threads      []objects.Thread `json:"threads"`
-	FoundThreads uint             `json:"found_threads"`
+	Threads      []Thread `json:"threads"`
+	FoundThreads uint     `json:"found_threads"`
 }
 
 type deactivateChatRequest struct {
@@ -90,8 +82,8 @@ type sendSneakPeekRequest struct {
 }
 
 type updateChatPropertiesRequest struct {
-	ID         string             `json:"id"`
-	Properties objects.Properties `json:"properties"`
+	ID         string     `json:"id"`
+	Properties Properties `json:"properties"`
 }
 
 type deleteChatPropertiesRequest struct {
@@ -100,9 +92,9 @@ type deleteChatPropertiesRequest struct {
 }
 
 type updateThreadPropertiesRequest struct {
-	ChatID     string             `json:"chat_id"`
-	ThreadID   string             `json:"thread_id"`
-	Properties objects.Properties `json:"properties"`
+	ChatID     string     `json:"chat_id"`
+	ThreadID   string     `json:"thread_id"`
+	Properties Properties `json:"properties"`
 }
 
 type deleteThreadPropertiesRequest struct {
@@ -112,10 +104,10 @@ type deleteThreadPropertiesRequest struct {
 }
 
 type updateEventPropertiesRequest struct {
-	ChatID     string             `json:"chat_id"`
-	ThreadID   string             `json:"thread_id"`
-	EventID    string             `json:"event_id"`
-	Properties objects.Properties `json:"properties"`
+	ChatID     string     `json:"chat_id"`
+	ThreadID   string     `json:"thread_id"`
+	EventID    string     `json:"event_id"`
+	Properties Properties `json:"properties"`
 }
 
 type deleteEventPropertiesRequest struct {

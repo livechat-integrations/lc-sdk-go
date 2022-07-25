@@ -7,7 +7,6 @@ import (
 
 	"github.com/livechat/lc-sdk-go/v3/authorization"
 	i "github.com/livechat/lc-sdk-go/v3/internal"
-	"github.com/livechat/lc-sdk-go/v3/objects"
 )
 
 type agentAPI interface {
@@ -42,7 +41,7 @@ func (a *API) SetAuthorID(authorID string) {
 }
 
 // ListChats returns chat summaries list.
-func (a *API) ListChats(filters *chatsFilters, sortOrder, pageID string, limit uint) (summary []objects.ChatSummary, found uint, previousPage, nextPage string, err error) {
+func (a *API) ListChats(filters *chatsFilters, sortOrder, pageID string, limit uint) (summary []ChatSummary, found uint, previousPage, nextPage string, err error) {
 	var resp listChatsResponse
 	err = a.Call("list_chats", &listChatsRequest{
 		Filters: filters,
@@ -57,8 +56,8 @@ func (a *API) ListChats(filters *chatsFilters, sortOrder, pageID string, limit u
 }
 
 // GetChat returns given thread for given chat.
-func (a *API) GetChat(chatID string, threadID string) (objects.Chat, error) {
-	var resp objects.Chat
+func (a *API) GetChat(chatID string, threadID string) (Chat, error) {
+	var resp Chat
 	err := a.Call("get_chat", &getChatRequest{
 		ChatID:   chatID,
 		ThreadID: threadID,
@@ -68,7 +67,7 @@ func (a *API) GetChat(chatID string, threadID string) (objects.Chat, error) {
 }
 
 // ListChats returns threads list.
-func (a *API) ListThreads(chatID, sortOrder, pageID string, limit, minEventsCount uint, filters *threadsFilters) (threads []objects.Thread, found uint, previousPage, nextPage string, err error) {
+func (a *API) ListThreads(chatID, sortOrder, pageID string, limit, minEventsCount uint, filters *threadsFilters) (threads []Thread, found uint, previousPage, nextPage string, err error) {
 	var resp listThreadsResponse
 	err = a.Call("list_threads", &listThreadsRequest{
 		ChatID: chatID,
@@ -85,7 +84,7 @@ func (a *API) ListThreads(chatID, sortOrder, pageID string, limit, minEventsCoun
 }
 
 // ListArchives returns archived chats.
-func (a *API) ListArchives(filters *archivesFilters, page, limit uint) (chats []objects.Chat, currentPage, totalPages uint, err error) {
+func (a *API) ListArchives(filters *archivesFilters, page, limit uint) (chats []Chat, currentPage, totalPages uint, err error) {
 	var resp listArchivesResponse
 	err = a.Call("list_archives", &listArchivesRequest{
 		Filters: filters,
@@ -157,7 +156,7 @@ func (a *API) UnfollowChat(chatID string) error {
 }
 
 // GrantChatAccess grants access to a new chat without overwriting the existing ones.
-func (a *API) GrantChatAccess(id string, access objects.Access) error {
+func (a *API) GrantChatAccess(id string, access Access) error {
 	return a.Call("grant_chat_access", &modifyChatAccessRequest{
 		ID:     id,
 		Access: access,
@@ -165,7 +164,7 @@ func (a *API) GrantChatAccess(id string, access objects.Access) error {
 }
 
 // RevokeChatAccess removes access to a chat.
-func (a *API) RevokeChatAccess(id string, access objects.Access) error {
+func (a *API) RevokeChatAccess(id string, access Access) error {
 	return a.Call("revoke_chat_access", &modifyChatAccessRequest{
 		ID:     id,
 		Access: access,
@@ -173,7 +172,7 @@ func (a *API) RevokeChatAccess(id string, access objects.Access) error {
 }
 
 // SetChatAccess gives access to a new chat overwriting the existing ones.
-func (a *API) SetChatAccess(id string, access objects.Access) error {
+func (a *API) SetChatAccess(id string, access Access) error {
 	return a.Call("set_chat_access", &modifyChatAccessRequest{
 		ID:     id,
 		Access: access,
@@ -221,7 +220,7 @@ func (a *API) RemoveUserFromChat(chatID, userID, userType string) error {
 //
 // Supported event types are: event, message, system_message and file.
 func (a *API) SendEvent(chatID string, event interface{}, attachToLastThread bool) (string, error) {
-	if err := objects.ValidateEvent(event); err != nil {
+	if err := ValidateEvent(event); err != nil {
 		return "", err
 	}
 
@@ -249,7 +248,7 @@ func (a *API) SendRichMessagePostback(chatID, eventID, threadID, postbackID stri
 }
 
 // UpdateChatProperties updates given chat's properties.
-func (a *API) UpdateChatProperties(chatID string, properties objects.Properties) error {
+func (a *API) UpdateChatProperties(chatID string, properties Properties) error {
 	return a.Call("update_chat_properties", &updateChatPropertiesRequest{
 		ID:         chatID,
 		Properties: properties,
@@ -265,7 +264,7 @@ func (a *API) DeleteChatProperties(chatID string, properties map[string][]string
 }
 
 // UpdateThreadProperties updates given thread's properties.
-func (a *API) UpdateThreadProperties(chatID, threadID string, properties objects.Properties) error {
+func (a *API) UpdateThreadProperties(chatID, threadID string, properties Properties) error {
 	return a.Call("update_thread_properties", &updateThreadPropertiesRequest{
 		ChatID:     chatID,
 		ThreadID:   threadID,
@@ -283,7 +282,7 @@ func (a *API) DeleteThreadProperties(chatID, threadID string, properties map[str
 }
 
 // UpdateEventProperties updates given event's properties.
-func (a *API) UpdateEventProperties(chatID, threadID, eventID string, properties objects.Properties) error {
+func (a *API) UpdateEventProperties(chatID, threadID, eventID string, properties Properties) error {
 	return a.Call("update_event_properties", &updateEventPropertiesRequest{
 		ChatID:     chatID,
 		ThreadID:   threadID,
@@ -321,8 +320,8 @@ func (a *API) UntagThread(chatID, threadID, tag string) error {
 }
 
 // GetCustomer returns Customer.
-func (a *API) GetCustomer(customerID string) (customer objects.Customer, err error) {
-	var resp objects.Customer
+func (a *API) GetCustomer(customerID string) (customer Customer, err error) {
+	var resp Customer
 	err = a.Call("get_customer", &getCustomersRequest{
 		ID: customerID,
 	}, &resp)
@@ -331,7 +330,7 @@ func (a *API) GetCustomer(customerID string) (customer objects.Customer, err err
 }
 
 // ListCustomers returns the list of Customers.
-func (a *API) ListCustomers(limit uint, pageID, sortOrder, sortBy string, filters *customersFilters) (customers []objects.Customer, total uint, limited uint, previousPage, nextPage string, err error) {
+func (a *API) ListCustomers(limit uint, pageID, sortOrder, sortBy string, filters *customersFilters) (customers []Customer, total uint, limited uint, previousPage, nextPage string, err error) {
 	var resp listCustomersResponse
 	err = a.Call("list_customers", &listCustomersRequest{
 		PageID:    pageID,
@@ -435,8 +434,8 @@ func (a *API) UnfollowCustomer(customerID string) error {
 	}, &emptyResponse{})
 }
 
-func (a *API) ListRoutingStatuses(groupIDs []int) ([]objects.AgentStatus, error) {
-	var resp []objects.AgentStatus
+func (a *API) ListRoutingStatuses(groupIDs []int) ([]AgentStatus, error) {
+	var resp []AgentStatus
 	err := a.Call("list_routing_statuses", &listRoutingStatusesRequest{
 		Filters: &routingStatusesFilter{
 			GroupIDs: groupIDs,

@@ -1,6 +1,6 @@
 // Package customer provides the client and structures for making Web API requests to Customer Chat API.
 //
-// Detailed documentation of Customer Chat API is available here: https://developers.livechatinc.com/docs/messaging/customer-chat-api/.
+// Detailed documentation of Customer Chat API is available here: https://developers.livechat.com/docs/messaging/customer-chat-api/.
 //
 // All the methods of API have their analogue in Customer Chat API except for SendMessage and SendSystemMessage, which are
 // specializations of SendEvent.

@@ -306,7 +306,7 @@ func createMockedResponder(t *testing.T, method string) roundTripFunc {
 func TestRejectAPICreationWithoutTokenGetter(t *testing.T) {
 	_, err := configuration.NewAPI(nil, nil, "client_id")
 	if err == nil {
-		t.Errorf("API should not be created without token getter")
+		t.Error("API should not be created without token getter")
 	}
 }
 
@@ -315,7 +315,7 @@ func TestRegisterWebhookShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	cpf := configuration.NewChatPresenceFilter().WithMyBots().WithUserIDs([]string{"agent@smith.com"}, true)
@@ -338,7 +338,7 @@ func TestListWebhooksShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	resp, rErr := api.ListWebhooks(nil)
@@ -356,7 +356,7 @@ func TestUnregisterWebhookShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	rErr := api.UnregisterWebhook("pqi8oasdjahuakndw9nsad9na", nil)
@@ -370,7 +370,7 @@ func TestCreateBotShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	botID, rErr := api.CreateBot("John Doe", "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg", 6, "first", []*configuration.GroupConfig{}, "dummy_client_id", "dummy/timezone", configuration.WorkScheduler{})
@@ -388,10 +388,10 @@ func TestCreateBotShouldReturnErrorForInvalidInput(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
-	groups := []*configuration.GroupConfig{&configuration.GroupConfig{Priority: "supervisor"}}
+	groups := []*configuration.GroupConfig{{Priority: "supervisor"}}
 	_, rErr := api.CreateBot("John Doe", "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg", 6, "first", groups, "dummy_client_id", "dummy/timezone", configuration.WorkScheduler{})
 	if rErr.Error() != "DoNotAssign priority is allowed only as default group priority" {
 		t.Errorf("CreateBot failed: %v", rErr)
@@ -403,7 +403,7 @@ func TestUpdateBotShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	rErr := api.UpdateBot("pqi8oasdjahuakndw9nsad9na", "John Doe", "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg", 6, "first", []*configuration.GroupConfig{}, "dummy/timezone", configuration.WorkScheduler{})
@@ -417,10 +417,10 @@ func TestUpdateBotShouldReturnErrorForInvalidInput(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
-	groups := []*configuration.GroupConfig{&configuration.GroupConfig{Priority: "supervisor"}}
+	groups := []*configuration.GroupConfig{{Priority: "supervisor"}}
 	rErr := api.UpdateBot("pqi8oasdjahuakndw9nsad9na", "John Doe", "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg", 6, "first", groups, "dummy/timezone", configuration.WorkScheduler{})
 	if rErr.Error() != "DoNotAssign priority is allowed only as default group priority" {
 		t.Errorf("CreateBot failed: %v", rErr)
@@ -432,7 +432,7 @@ func TestDeleteBotShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	rErr := api.DeleteBot("pqi8oasdjahuakndw9nsad9na")
@@ -446,7 +446,7 @@ func TestListBotsShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	resp, rErr := api.ListBots(true, []string{})
@@ -472,7 +472,7 @@ func TestGetBotShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	resp, rErr := api.GetBot("5c9871d5372c824cbf22d860a707a578", []string{})
@@ -490,7 +490,7 @@ func TestRegisterPropertyShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	rErr := api.RegisterProperty(&configuration.PropertyConfig{
@@ -517,7 +517,7 @@ func TestUnregisterPropertyShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	rErr := api.UnregisterProperty("dummy_property", "dummy_client_id")
@@ -531,7 +531,7 @@ func TestPublishPropertyShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	rErr := api.PublishProperty("dummy_property", "dummy_client_id", true, false)
@@ -545,7 +545,7 @@ func TestListPropertiesShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	resp, rErr := api.ListProperties("dummy_client_id")
@@ -564,7 +564,7 @@ func TestListLicensePropertiesShouldReturnDataReceivedFromConfApi(t *testing.T) 
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	resp, rErr := api.ListLicenseProperties("", "")
@@ -586,7 +586,7 @@ func TestListGroupPropertiesShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	resp, rErr := api.ListGroupProperties(0, "", "")
@@ -608,7 +608,7 @@ func TestCreateAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	agentID, rErr := api.CreateAgent("smith@example.com", &configuration.AgentFields{Name: "Agent Smith"})
@@ -626,7 +626,7 @@ func TestGetAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	agent, rErr := api.GetAgent("smith@example.com", []string{})
@@ -648,7 +648,7 @@ func TestListAgentsShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	agents, rErr := api.ListAgents([]int32{0, 1}, []string{})
@@ -674,7 +674,7 @@ func TestUpdateAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	rErr := api.UpdateAgent("smith@example.com", &configuration.AgentFields{JobTitle: "Virus"})
@@ -688,7 +688,7 @@ func TestDeleteAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	rErr := api.DeleteAgent("smith@example.com")
@@ -702,7 +702,7 @@ func TestSuspendAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	rErr := api.SuspendAgent("smith@example.com")
@@ -716,7 +716,7 @@ func TestUnsuspendAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	rErr := api.UnsuspendAgent("smith@example.com")
@@ -730,7 +730,7 @@ func TestRequestAgentUnsuspensionShouldReturnDataReceivedFromConfApi(t *testing.
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	rErr := api.RequestAgentUnsuspension()
@@ -744,7 +744,7 @@ func TestApproveAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	rErr := api.ApproveAgent("smith@example.com")
@@ -758,7 +758,7 @@ func TestCreateGroupShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	groupID, rErr := api.CreateGroup("name", "en", map[string]configuration.GroupPriority{})
@@ -776,7 +776,7 @@ func TestUpdateGroupShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	rErr := api.UpdateGroup(11, "name", "en", map[string]configuration.GroupPriority{})
@@ -790,7 +790,7 @@ func TestDeleteGroupShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	rErr := api.DeleteGroup(11)
@@ -804,7 +804,7 @@ func TestListGroupsShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	groups, rErr := api.ListGroups([]string{})
@@ -830,7 +830,7 @@ func TestGetGroupShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	resp, rErr := api.GetGroup(1)
@@ -852,7 +852,7 @@ func TestListWebhookNamesShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	resp, rErr := api.ListWebhookNames("3.2")
@@ -874,7 +874,7 @@ func TestEnableLicenseWebhooksShouldReturnDataReceivedFromConfAPI(t *testing.T) 
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	err = api.EnableLicenseWebhooks(nil)
@@ -888,7 +888,7 @@ func TestDisableLicenseWebhooksShouldReturnDataReceivedFromConfAPI(t *testing.T)
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	err = api.DisableLicenseWebhooks(nil)
@@ -902,7 +902,7 @@ func TestGetLicenseWebhooksStateShouldReturnDataReceivedFromConfAPI(t *testing.T
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	state, err := api.GetLicenseWebhooksState(nil)
@@ -910,7 +910,7 @@ func TestGetLicenseWebhooksStateShouldReturnDataReceivedFromConfAPI(t *testing.T
 		t.Errorf("GetWebhooksState failed: %v", err)
 	}
 	if !state.Enabled {
-		t.Errorf("webhooks' state should be enabled'")
+		t.Error("webhooks' state should be enabled'")
 	}
 }
 
@@ -919,7 +919,7 @@ func TestDeleteLicensePropertiesShouldReturnDataReceivedFromConfAPI(t *testing.T
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	err = api.DeleteLicenseProperties(nil)
@@ -933,7 +933,7 @@ func TestDeleteGroupPropertiesShouldReturnDataReceivedFromConfAPI(t *testing.T) 
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	err = api.DeleteGroupProperties(0, nil)
@@ -947,7 +947,7 @@ func TestUpdateLicensePropertiesShouldReturnDataReceivedFromConfAPI(t *testing.T
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	err = api.UpdateLicenseProperties(nil)
@@ -961,7 +961,7 @@ func TestUpdateGroupPropertiesShouldReturnDataReceivedFromConfAPI(t *testing.T) 
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	err = api.UpdateGroupProperties(0, nil)
@@ -975,7 +975,7 @@ func TestAddAutoAccessShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	resp, err := api.AddAutoAccess([]int{}, nil, nil, nil, "", "")
@@ -993,7 +993,7 @@ func TestUpdateAutoAccessShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	err = api.UpdateAutoAccess("foo", []int{}, nil, nil, nil, "", "")
@@ -1007,7 +1007,7 @@ func TestDeleteAutoAccessShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	err = api.DeleteAutoAccess("foo")
@@ -1021,7 +1021,7 @@ func TestListAutoAccessesShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
-		t.Errorf("API creation failed")
+		t.Error("API creation failed")
 	}
 
 	resp, err := api.ListAutoAccesses()
