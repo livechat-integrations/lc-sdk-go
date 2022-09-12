@@ -126,6 +126,7 @@ var mockedResponses = map[string]string{
 	}`,
 	"get_agent": `{
 		"id": "smith@example.com",
+		"account_id": "d24fa41e-bc16-41b8-a15b-9ca45ff7e0cf",
 		"name": "Agent Smith",
 		"avatar_path": "https://domain.com/avatar.image.jpg",
 		"role": "administrator",
@@ -134,6 +135,7 @@ var mockedResponses = map[string]string{
 	"list_agents": `[
 		{
 			"id": "smith@example.com",
+			"account_id": "d24fa41e-bc16-41b8-a15b-9ca45ff7e0cf",
 			"job_title": "Support Hero",
 			"max_chats_count": 5,
 			"summaries": [
@@ -143,6 +145,7 @@ var mockedResponses = map[string]string{
 		},
 		{
 			"id": "adam@example.com",
+			"account_id": "2fca3315-f6b2-422f-8550-c84b649cef1a",
 			"job_title": "Support Hero (Newbie)",
 			"max_chats_count": 2,
 			"summaries": [
@@ -690,6 +693,10 @@ func TestGetAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
 		t.Errorf("Invalid agent ID: %v", agent.ID)
 	}
 
+	if agent.AccountID != "d24fa41e-bc16-41b8-a15b-9ca45ff7e0cf" {
+		t.Errorf("Invalid agent account ID: %v", agent.AccountID)
+	}
+
 	if agent.Name != "Agent Smith" {
 		t.Errorf("Invalid agent name: %v", agent.Name)
 	}
@@ -714,6 +721,10 @@ func TestListAgentsShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	if agents[0].ID != "smith@example.com" {
 		t.Errorf("Invalid agent ID: %v", agents[0].ID)
+	}
+
+	if agents[0].AccountID != "d24fa41e-bc16-41b8-a15b-9ca45ff7e0cf" {
+		t.Errorf("Invalid agent account ID: %v", agents[0].AccountID)
 	}
 
 	if agents[1].ID != "adam@example.com" {

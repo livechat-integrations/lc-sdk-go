@@ -142,7 +142,8 @@ type Group struct {
 
 // Agent defines basic Agent information
 type Agent struct {
-	ID string `json:"id"`
+	ID        string `json:"id"`
+	AccountID string `json:"account_id,omitempty"`
 	*AgentFields
 }
 
