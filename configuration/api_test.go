@@ -138,6 +138,7 @@ var mockedResponses = map[string]string{
 			"account_id": "d24fa41e-bc16-41b8-a15b-9ca45ff7e0cf",
 			"job_title": "Support Hero",
 			"max_chats_count": 5,
+			"last_logout": "2022-08-23T14:31:21.000000Z",
 			"summaries": [
 				"daily_summary",
 				"weekly_summary"
@@ -710,7 +711,7 @@ func TestListAgentsShouldReturnDataReceivedFromConfApi(t *testing.T) {
 		t.Error("API creation failed")
 	}
 
-	agents, rErr := api.ListAgents([]int32{0, 1}, []string{})
+	agents, rErr := api.ListAgents([]int32{0, 1}, []string{"last_logout"})
 	if rErr != nil {
 		t.Errorf("CreateAgent failed: %v", rErr)
 	}
@@ -725,6 +726,10 @@ func TestListAgentsShouldReturnDataReceivedFromConfApi(t *testing.T) {
 
 	if agents[0].AccountID != "d24fa41e-bc16-41b8-a15b-9ca45ff7e0cf" {
 		t.Errorf("Invalid agent account ID: %v", agents[0].AccountID)
+	}
+
+	if agents[0].LastLogout != "2022-08-23T14:31:21.000000Z" {
+		t.Errorf("Invalid agent last_logout: %v", agents[0].LastLogout)
 	}
 
 	if agents[1].ID != "adam@example.com" {
