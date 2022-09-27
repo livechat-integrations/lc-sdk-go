@@ -310,6 +310,16 @@ var mockedResponses = map[string]string{
 		}
 	]`,
 	"update_tag": `{}`,
+	"list_groups_properties": `[
+		{
+			"id": 0,
+			"properties": {
+				"abc": {
+					"a_property": "a"
+				}
+			}
+		}
+	]`,
 }
 
 func createMockedResponder(t *testing.T, method string) roundTripFunc {
@@ -1257,4 +1267,32 @@ func TestUpdateTagShouldReturnDataReceivedFromConfApi(t *testing.T) {
 	if rErr := api.UpdateTag("tageroo", []int{0}); rErr != nil {
 		t.Errorf("UpdateTag failed: %v", rErr)
 	}
+}
+
+func TestListGroupsProperties(t *testing.T) {
+	client := NewTestClient(createMockedResponder(t, "list_groups_properties"))
+
+	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
+	if err != nil {
+		t.Error("API creation failed")
+	}
+
+	resp, rErr := api.ListGroupsProperties("namespace", "prefix,", []int{0, 1})
+
+	if rErr != nil {
+		t.Errorf("ListGroupsProperties failed: %v", rErr)
+	}
+
+	if len(resp) != 1 {
+		t.Errorf("Invalid response length: %v", len(resp))
+	}
+
+	if resp[0].ID != 0 {
+		t.Errorf("Invalid response id: %v", resp[0].ID)
+	}
+
+	if resp[0].Properties["abc"]["a_property"] != "a" {
+		t.Errorf("Invalid response: %v", resp[0].ID)
+	}
+
 }
