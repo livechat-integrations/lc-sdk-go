@@ -338,12 +338,6 @@ var mockedResponses = map[string]string{
 				"PWJ8Y4THAV"
 		]
 	}`,
-	"list_customers": `{
-		"customers": [],
-		"total_customers": 0,
-		"limited_customers": 1,
-		"previous_page_id": "prevpagehash"
-	}`,
 	"create_customer": `{
 		"customer_id": "mister_customer"
 	}`,
@@ -947,36 +941,6 @@ func TestGetCustomerShouldReturnDataReceivedFromAgentAPI(t *testing.T) {
 	}
 }
 
-func TestListCustomersShouldReturnDataReceivedFromAgentAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "list_customers"))
-
-	api, err := agent.NewAPI(stubBearerTokenGetter, client, "client_id")
-	if err != nil {
-		t.Error("API creation failed")
-	}
-
-	customers, total, limited, prevPage, nextPage, rErr := api.ListCustomers(100, "page", "asc", "", agent.NewCustomersFilters())
-	if rErr != nil {
-		t.Errorf("ListCustomers failed: %v", rErr)
-	}
-
-	if len(customers) != 0 {
-		t.Errorf("Invalid customers len: %v", len(customers))
-	}
-	if total != 0 {
-		t.Errorf("Invalid total: %v", total)
-	}
-	if prevPage != "prevpagehash" {
-		t.Errorf("Invalid previous page ID: %v", prevPage)
-	}
-	if nextPage != "" {
-		t.Errorf("Invalid next page ID: %v", nextPage)
-	}
-	if limited != 1 {
-		t.Errorf("Invalid limited customers amount: %v", limited)
-	}
-}
-
 func TestCreateCustomerShouldReturnDataReceivedFromAgentAPI(t *testing.T) {
 	client := NewTestClient(createMockedResponder(t, "create_customer"))
 
@@ -1360,18 +1324,6 @@ func TestUntagThreadShouldNotCrashOnErrorResponse(t *testing.T) {
 
 	rErr := api.UntagThread("stubChatID", "stubThreadID", "tag")
 	verifyErrorResponse("UntagThread", rErr, t)
-}
-
-func TestListCustomersShouldNotCrashOnErrorResponse(t *testing.T) {
-	client := NewTestClient(createMockedErrorResponder(t, "list_customers"))
-
-	api, err := agent.NewAPI(stubBearerTokenGetter, client, "client_id")
-	if err != nil {
-		t.Error("API creation failed")
-	}
-
-	_, _, _, _, _, rErr := api.ListCustomers(100, "page", "asc", "", agent.NewCustomersFilters())
-	verifyErrorResponse("ListCustomers", rErr, t)
 }
 
 func TestCreateCustomerShouldNotCrashOnErrorResponse(t *testing.T) {

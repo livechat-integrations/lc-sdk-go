@@ -166,21 +166,6 @@ type getCustomersRequest struct {
 	ID string `json:"id"`
 }
 
-type listCustomersRequest struct {
-	PageID    string            `json:"page_id,omitempty"`
-	Limit     uint              `json:"limit,omitempty"`
-	SortOrder string            `json:"sort_order,omitempty"`
-	Filters   *customersFilters `json:"filters,omitempty"`
-	SortBy    string            `json:"sort_by,omitempty"`
-}
-
-type listCustomersResponse struct {
-	hashedPaginationResponse
-	Customers        []Customer `json:"customers"`
-	TotalCustomers   uint       `json:"total_customers"`
-	LimitedCustomers uint       `json:"limited_customers"`
-}
-
 type createCustomerRequest struct {
 	Name          string              `json:"name,omitempty"`
 	Email         string              `json:"email,omitempty"`

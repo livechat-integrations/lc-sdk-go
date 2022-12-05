@@ -198,112 +198,6 @@ func TestArchiveFiltersByThreadsClearsOtherFilters(t *testing.T) {
 	}
 }
 
-func TestStringFilterMatchValues(t *testing.T) {
-	sf := agent.NewStringFilter([]string{"value"}, true)
-
-	if sf.Values[0] != "value" {
-		t.Errorf("StringFilter.Values invalid: %v", sf.Values)
-	}
-
-	if sf.ExcludeValues != nil {
-		t.Errorf("StringFilter.ExcludeValues should not be set: %v", sf.ExcludeValues)
-	}
-}
-
-func TestStringFilterExcludeValues(t *testing.T) {
-	sf := agent.NewStringFilter([]string{"value"}, false)
-
-	if sf.ExcludeValues[0] != "value" {
-		t.Errorf("StringFilter.Values invalid: %v", sf.ExcludeValues)
-	}
-
-	if sf.Values != nil {
-		t.Errorf("StringFilter.ExcludeValues should not be set: %v", sf.Values)
-	}
-}
-
-func TestCustomersFiltersStringFilterFields(t *testing.T) {
-	cf := agent.NewCustomersFilters()
-	cf.ByCountry([]string{"Wakanda"}, true).
-		ByName([]string{"Pink Panther"}, true).
-		ByEmail([]string{"e@mail"}, false).
-		ByID([]string{"id"}, false)
-
-	if cf.Country.Values[0] != "Wakanda" {
-		t.Errorf("CustomersFilters.Country.Values invalid: %v", cf.Country.Values)
-	}
-
-	if cf.Country.ExcludeValues != nil {
-		t.Errorf("CustomersFilters.Country.ExcludeValues should not be set: %v", cf.Country.ExcludeValues)
-	}
-
-	if cf.Name.Values[0] != "Pink Panther" {
-		t.Errorf("CustomersFilters.Name.Values invalid: %v", cf.Name.Values)
-	}
-
-	if cf.Name.ExcludeValues != nil {
-		t.Errorf("CustomersFilters.Name.ExcludeValues should not be set: %v", cf.Name.ExcludeValues)
-	}
-
-	if cf.Email.ExcludeValues[0] != "e@mail" {
-		t.Errorf("CustomersFilters.Email.ExcludeValues invalid: %v", cf.Email.ExcludeValues)
-	}
-
-	if cf.Email.Values != nil {
-		t.Errorf("CustomersFilters.Email.Values should not be set: %v", cf.Email.Values)
-	}
-
-	if cf.CustomerID.ExcludeValues[0] != "id" {
-		t.Errorf("CustomersFilters.CustomerID.ExcludeValues invalid: %v", cf.CustomerID.ExcludeValues)
-	}
-
-	if cf.CustomerID.Values != nil {
-		t.Errorf("CustomersFilters.CustomerID.Values should not be set: %v", cf.CustomerID.Values)
-	}
-}
-
-func TestCustomersFiltersRangeFilterFields(t *testing.T) {
-	rf := &agent.RangeFilter{
-		LT: 5,
-		GT: 2,
-	}
-	cf := agent.NewCustomersFilters()
-	cf.ByChatsCount(rf).ByThreadsCount(rf).ByVisitsCount(rf)
-
-	if cf.ChatsCount.LT != 5 || cf.ChatsCount.GT != 2 {
-		t.Errorf("CustomersFilters.ChatsCount invalid: %v", cf.ChatsCount)
-	}
-
-	if cf.ThreadsCount.LT != 5 || cf.ThreadsCount.GT != 2 {
-		t.Errorf("CustomersFilters.ThreadsCount invalid: %v", cf.ThreadsCount)
-	}
-
-	if cf.VisitsCount.LT != 5 || cf.VisitsCount.GT != 2 {
-		t.Errorf("CustomersFilters.VisitsCount invalid: %v", cf.VisitsCount)
-	}
-}
-
-func TestCustomersFiltersDateRangeFilterFields(t *testing.T) {
-	drf := &agent.DateRangeFilter{
-		GT: "11-09-2001",
-		LT: "02-04-2137",
-	}
-	cf := agent.NewCustomersFilters()
-	cf.ByCreationTime(drf).ByAgentsLastActivity(drf).ByCustomersLastActivity(drf)
-
-	if cf.CreatedAt.LT != "02-04-2137" || cf.CreatedAt.GT != "11-09-2001" {
-		t.Errorf("CustomersFilters.CreatedAt invalid: %v", cf.CreatedAt)
-	}
-
-	if cf.AgentLastEventCreatedAt.LT != "02-04-2137" || cf.AgentLastEventCreatedAt.GT != "11-09-2001" {
-		t.Errorf("CustomersFilters.AgentLastEventCreatedAt invalid: %v", cf.AgentLastEventCreatedAt)
-	}
-
-	if cf.CustomerLastEventCreatedAt.LT != "02-04-2137" || cf.CustomerLastEventCreatedAt.GT != "11-09-2001" {
-		t.Errorf("CustomersFilters.CustomerLastEventCreatedAt invalid: %v", cf.CustomerLastEventCreatedAt)
-	}
-}
-
 func TestChatsFilters(t *testing.T) {
 	cf := agent.NewChatsFilters()
 	if !cf.IncludeActive {
@@ -353,14 +247,5 @@ func TestIntegerFilterExcludeValues(t *testing.T) {
 
 	if intF.Values != nil {
 		t.Errorf("IntegerFilter.ExcludeValues should not be set: %v", intF.Values)
-	}
-}
-
-func TestCustomersFiltersIntegerFilterField(t *testing.T) {
-	cf := agent.NewCustomersFilters()
-	cf.ByChatGroupIDs([]int64{12345678901234567}, true)
-
-	if cf.ChatGroupIDs.Values[0] != 12345678901234567 {
-		t.Errorf("CustomersFilters.ChatGroupIDs.Values invalid: %v", cf.ChatGroupIDs.Values)
 	}
 }
