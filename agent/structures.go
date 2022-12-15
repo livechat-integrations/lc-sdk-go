@@ -153,23 +153,28 @@ func (u *User) Customer() *Customer {
 
 // Visit contains information about particular customer's visit.
 type Visit struct {
-	IP          string `json:"ip"`
-	UserAgent   string `json:"user_agent"`
-	Geolocation struct {
-		Country     string `json:"country"`
-		CountryCode string `json:"country_code"`
-		Region      string `json:"region"`
-		City        string `json:"city"`
-		Timezone    string `json:"timezone"`
-	} `json:"geolocation"`
-	StartedAt time.Time `json:"started_at"`
-	EndedAt   time.Time `json:"ended_at"`
-	Referrer  string    `json:"referrer"`
-	LastPages []struct {
+	IP          string      `json:"ip"`
+	UserAgent   string      `json:"user_agent"`
+	Geolocation Geolocation `json:"geolocation"`
+	StartedAt   time.Time   `json:"started_at"`
+	EndedAt     time.Time   `json:"ended_at"`
+	Referrer    string      `json:"referrer"`
+	LastPages   []struct {
 		OpenedAt time.Time `json:"opened_at"`
 		URL      string    `json:"url"`
 		Title    string    `json:"title"`
 	} `json:"last_pages"`
+}
+
+// Geolocation contains geolocation information.
+type Geolocation struct {
+	Country     string `json:"country"`
+	CountryCode string `json:"country_code"`
+	Region      string `json:"region"`
+	City        string `json:"city"`
+	Timezone    string `json:"timezone"`
+	Latitude    string `json:"latitude"`
+	Longitude   string `json:"longitude"`
 }
 
 // Chat represents LiveChat chat.
@@ -256,6 +261,11 @@ type Thread struct {
 	NextAccessibleThreadID    string     `json:"next_accessible_thread_id,omitempty"`
 	Queue                     *Queue     `json:"queue,omitempty"`
 	QueuesDuration            *int       `json:"queues_duration,omitempty"`
+	CustomerVisit             *struct {
+		IP          string      `json:"ip"`
+		UserAgent   string      `json:"user_agent"`
+		Geolocation Geolocation `json:"geolocation"`
+	} `json:"customer_visit,omitempty"`
 }
 
 // Access represents LiveChat chat and thread access

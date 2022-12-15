@@ -123,8 +123,8 @@ func (a *api) Call(action string, reqPayload interface{}, respPayload interface{
 	}
 	err = a.send(req, respPayload)
 
-	executionTime := time.Now().Sub(start)
-	a.statsSink(metrics.APICallStats{action, executionTime, err == nil})
+	executionTime := time.Since(start)
+	a.statsSink(metrics.APICallStats{Method: action, ExecutionTime: executionTime, Success: err == nil})
 
 	return err
 }
@@ -200,8 +200,8 @@ func (a *fileUploadAPI) UploadFile(filename string, file []byte) (string, error)
 	}
 	err = a.send(req, &resp)
 
-	executionTime := time.Now().Sub(start)
-	a.statsSink(metrics.APICallStats{"upload_file", executionTime, err == nil})
+	executionTime := time.Since(start)
+	a.statsSink(metrics.APICallStats{Method: "upload_file", ExecutionTime: executionTime, Success: err == nil})
 
 	return resp.URL, err
 }
