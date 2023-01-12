@@ -334,7 +334,7 @@ func createMockedResponder(t *testing.T, method string) roundTripFunc {
 			}
 		}
 
-		if req.URL.String() != "https://api.livechatinc.com/v3.5/configuration/action/"+method {
+		if req.URL.String() != "https://api.livechatinc.com/v3.6/configuration/action/"+method {
 			t.Errorf("Invalid URL for Configuration API request: %s", req.URL.String())
 			return createServerError("Invalid URL")
 		}
@@ -906,7 +906,7 @@ func TestListWebhookNamesShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 		t.Error("API creation failed")
 	}
 
-	resp, rErr := api.ListWebhookNames("3.2")
+	resp, rErr := api.ListWebhookNames("3.6")
 	if rErr != nil {
 		t.Errorf("ListWebhookNames failed: %v", rErr)
 	}

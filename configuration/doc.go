@@ -6,5 +6,5 @@
 //
 // Configuration API Version
 //
-// This API Client uses Configuration API in version 3.5.
+// This API Client uses Configuration API in version 3.6.
 package configuration

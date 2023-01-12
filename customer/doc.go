@@ -7,5 +7,5 @@
 //
 // Customer Chat API Version
 //
-// This API Client uses Customer Chat API in version 3.5.
+// This API Client uses Customer Chat API in version 3.6.
 package customer

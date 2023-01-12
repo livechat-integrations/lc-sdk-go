@@ -32,7 +32,7 @@ All versions of LiveChat API are available as git tags in lc-sdk-go. However, a 
 
 ### Feedback
 
-​If you find any bugs or have trouble implementing the code on your own, please create an issue or contact us [LiveChat for Developers](https://developers.livechatinc.com/).
+If you find any bugs or have trouble implementing the code on your own, please create an issue or contact us [LiveChat for Developers](https://developers.livechatinc.com/).
 
 ### About LiveChat
 

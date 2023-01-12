@@ -6,5 +6,5 @@
 //
 // Agent Chat API Version
 //
-// This API Client uses Agent Chat API in version 3.5.
+// This API Client uses Agent Chat API in version 3.6.
 package agent

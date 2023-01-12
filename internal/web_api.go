@@ -17,7 +17,7 @@ import (
 	"github.com/livechat/lc-sdk-go/v6/metrics"
 )
 
-const apiVersion = "3.5"
+const apiVersion = "3.6"
 
 // RetryStrategyFunc is called by each API method if set to retry when handling an error.
 // If not set, there will be no retry at all.
