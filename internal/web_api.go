@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/google/go-querystring/query"
-	"github.com/livechat/lc-sdk-go/v5/authorization"
-	api_errors "github.com/livechat/lc-sdk-go/v5/errors"
-	"github.com/livechat/lc-sdk-go/v5/metrics"
+	"github.com/livechat/lc-sdk-go/v6/authorization"
+	api_errors "github.com/livechat/lc-sdk-go/v6/errors"
+	"github.com/livechat/lc-sdk-go/v6/metrics"
 )
 
 const apiVersion = "3.5"
