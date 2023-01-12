@@ -39,6 +39,7 @@ type api struct {
 	customHeaders         http.Header
 	retryStrategy         RetryStrategyFunc
 	statsSink             StatsSinkFunc
+	logger                *log.Logger
 }
 
 // HTTPRequestGenerator is called by each API method to generate api http url.
@@ -71,6 +72,7 @@ func NewAPI(t authorization.TokenGetter, client *http.Client, clientID string, r
 		httpEndpointGenerator: r,
 		customHeaders:         make(http.Header),
 		statsSink:             func(metrics.APICallStats) {},
+		logger:                log.Default(),
 	}, nil
 }
 
@@ -254,10 +256,10 @@ func (a *api) send(req *http.Request, respPayload interface{}) error {
 		}
 
 		if h := resp.Header.Get("Legacy"); h != "" {
-			log.Printf("[Notice] This is a legacy version. It will be deprecated after %s.", h)
+			a.logger.Printf("[Notice] This is a legacy version. It will be deprecated after %s.", h)
 		}
 		if h := resp.Header.Get("Deprecation"); h != "" {
-			log.Printf("[Warning] This version is deprecated. It will be decommissioned after %s.", h)
+			a.logger.Printf("[Warning] This version is deprecated. It will be decommissioned after %s.", h)
 		}
 
 		return json.Unmarshal(bodyBytes, respPayload)
@@ -288,4 +290,9 @@ func DefaultHTTPRequestGenerator(name string) HTTPEndpointGenerator {
 	return func(token *authorization.Token, host, action string) string {
 		return fmt.Sprintf("%s/v%s/%s/action/%s", host, apiVersion, name, action)
 	}
+}
+
+// SetLogger allows to set a custom logger. When it's not called, a default logger will be used.
+func (a *api) SetLogger(logger *log.Logger) {
+	a.logger = logger
 }
