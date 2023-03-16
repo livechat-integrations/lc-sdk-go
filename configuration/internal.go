@@ -240,3 +240,7 @@ type listGroupsPropertiesRequest struct {
 	Namespace  string `json:"namespace,omitempty"`
 	NamePrefix string `json:"name_prefix,omitempty"`
 }
+
+type reactivateEmailRequest struct {
+	AgentID string `json:"agent_id"`
+}

@@ -315,6 +315,7 @@ var mockedResponses = map[string]string{
 			}
 		}
 	]`,
+	"reactivate_email": `{}`,
 }
 
 func createMockedResponder(t *testing.T, method string) roundTripFunc {
@@ -1268,4 +1269,17 @@ func TestListGroupsProperties(t *testing.T) {
 		t.Errorf("Invalid response: %v", resp[0].ID)
 	}
 
+}
+
+func TestReactivateEmail(t *testing.T) {
+	client := NewTestClient(createMockedResponder(t, "reactivate_email"))
+
+	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
+	if err != nil {
+		t.Error("API creation failed")
+	}
+
+	if rErr := api.ReactivateEmail("agent_id"); rErr != nil {
+		t.Errorf("ReactivateEmail failed: %v", rErr)
+	}
 }

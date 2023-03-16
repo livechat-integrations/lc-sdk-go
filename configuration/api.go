@@ -520,3 +520,10 @@ func (a *API) ListGroupsProperties(namespace string, namePrefix string, groupIDs
 	}, &resp)
 	return resp, err
 }
+
+// Reactivates bounced email
+func (a *API) ReactivateEmail(agentID string) error {
+	return a.Call("reactivate_email", &reactivateEmailRequest{
+		AgentID: agentID,
+	}, &emptyResponse{})
+}
