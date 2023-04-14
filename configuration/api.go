@@ -177,7 +177,7 @@ func (a *API) ListAgents(groupIDs []int32, fields []string) ([]*Agent, error) {
 	}
 
 	if len(groupIDs) > 0 {
-		request.Filters = AgentsFilters{
+		request.Filters = &AgentsFilters{
 			GroupIDs: groupIDs,
 		}
 	}
