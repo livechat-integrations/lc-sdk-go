@@ -22,7 +22,7 @@ type createBotRequest struct {
 	MaxChatsCount        *uint          `json:"max_chats_count,omitempty"`
 	Groups               []*GroupConfig `json:"groups,omitempty"`
 	OwnerClientID        string         `json:"owner_client_id,omitempty"`
-	WorkScheduler        WorkScheduler  `json:"work_scheduler,omitempty"`
+	WorkScheduler        *WorkScheduler `json:"work_scheduler,omitempty"`
 	Timezone             string         `json:"timezone,omitempty"`
 }
 
@@ -84,12 +84,6 @@ type listLicensePropertiesRequest struct {
 	NamePrefix      string `json:"name_prefix,omitempty"`
 }
 
-type listGroupPropertiesRequest struct {
-	ID              uint   `json:"id"`
-	NamespacePrefix string `json:"namespace_prefix,omitempty"`
-	NamePrefix      string `json:"name_prefix,omitempty"`
-}
-
 type createAgentResponse struct {
 	ID string `json:"id"`
 }
@@ -102,8 +96,8 @@ type getAgentRequest struct {
 type getAgentResponse *Agent
 
 type listAgentsRequest struct {
-	Filters AgentsFilters `json:"filters,omitempty"`
-	Fields  []string      `json:"fields,omitempty"`
+	Filters *AgentsFilters `json:"filters,omitempty"`
+	Fields  []string       `json:"fields,omitempty"`
 }
 
 type listAgentsResponse []*Agent

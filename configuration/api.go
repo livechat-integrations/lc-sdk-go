@@ -84,7 +84,7 @@ func (a *API) UnregisterWebhook(id string, opts *ManageWebhooksDefinitionOptions
 }
 
 // CreateBot allows to create bot and returns its ID.
-func (a *API) CreateBot(name, avatar string, maxChats uint, defaultPriority GroupPriority, groups []*GroupConfig, ownerClientID, timezone string, workScheduler WorkScheduler) (string, error) {
+func (a *API) CreateBot(name, avatar string, maxChats uint, defaultPriority GroupPriority, groups []*GroupConfig, ownerClientID, timezone string, workScheduler *WorkScheduler) (string, error) {
 	var resp createBotResponse
 	if err := validateBotGroupsAssignment(groups); err != nil {
 		return "", err
@@ -104,7 +104,7 @@ func (a *API) CreateBot(name, avatar string, maxChats uint, defaultPriority Grou
 }
 
 // UpdateBot allows to update bot.
-func (a *API) UpdateBot(id, name, avatar string, maxChats uint, defaultPriority GroupPriority, groups []*GroupConfig, timezone string, workScheduler WorkScheduler) error {
+func (a *API) UpdateBot(id, name, avatar string, maxChats uint, defaultPriority GroupPriority, groups []*GroupConfig, timezone string, workScheduler *WorkScheduler) error {
 	if err := validateBotGroupsAssignment(groups); err != nil {
 		return err
 	}
@@ -182,7 +182,7 @@ func (a *API) ListAgents(groupIDs []int32, fields []string) ([]*Agent, error) {
 	}
 
 	if len(groupIDs) > 0 {
-		request.Filters = AgentsFilters{
+		request.Filters = &AgentsFilters{
 			GroupIDs: groupIDs,
 		}
 	}

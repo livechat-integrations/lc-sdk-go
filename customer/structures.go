@@ -137,7 +137,7 @@ type Chat struct {
 	ID         string     `json:"id,omitempty"`
 	Properties Properties `json:"properties,omitempty"`
 	Access     *Access    `json:"access,omitempty"`
-	Thread     Thread     `json:"thread,omitempty"`
+	Thread     *Thread    `json:"thread,omitempty"`
 	Threads    []Thread   `json:"threads,omitempty"`
 	Agents     map[string]*Agent
 	Customers  map[string]*Customer
@@ -202,7 +202,7 @@ func (c *Chat) UnmarshalJSON(data []byte) error {
 type Queue struct {
 	Position int       `json:"position"`
 	WaitTime int       `json:"wait_time"`
-	QueuedAt time.Time `json:"queued_at,omitempty"`
+	QueuedAt time.Time `json:"queued_at"`
 }
 
 // Thread represents LiveChat chat thread
@@ -240,7 +240,7 @@ type Customer struct {
 // ChatSummary represents a short summary of a chat
 type ChatSummary struct {
 	ID                  string    `json:"id"`
-	LastThreadCreatedAt time.Time `json:"last_thread_created_at,omitempty"`
+	LastThreadCreatedAt time.Time `json:"last_thread_created_at"`
 	LastThreadID        string    `json:"last_thread_id,omitempty"`
 	LastEventPerType    map[string]struct {
 		ThreadID        string    `json:"thread_id"`
@@ -324,7 +324,7 @@ type eventSpecific struct {
 type Event struct {
 	ID         string     `json:"id,omitempty"`
 	CustomID   string     `json:"custom_id,omitempty"`
-	CreatedAt  time.Time  `json:"created_at,omitempty"`
+	CreatedAt  time.Time  `json:"created_at"`
 	AuthorID   string     `json:"author_id"`
 	Properties Properties `json:"properties,omitempty"`
 	Recipients string     `json:"recipients,omitempty"`

@@ -100,7 +100,7 @@ type Bot struct {
 	MaxChatsCount        uint           `json:"max_chats_count,omitempty"`
 	Groups               []*GroupConfig `json:"groups,omitempty"`
 	JobTitle             string         `json:"job_title,omitempty"`
-	WorkScheduler        WorkScheduler  `json:"work_scheduler,omitempty"`
+	WorkScheduler        *WorkScheduler `json:"work_scheduler,omitempty"`
 }
 
 // GroupConfig defines bot's priority and membership in group
@@ -150,17 +150,17 @@ type Agent struct {
 
 // AgentFields defines set of configurable Agent fields
 type AgentFields struct {
-	Name               string        `json:"name,omitempty"`
-	Role               string        `json:"role,omitempty"`
-	Avatar             string        `json:"avatar,omitempty"`
-	JobTitle           string        `json:"job_title,omitempty"`
-	Mobile             string        `json:"mobile,omitempty"`
-	MaxChatsCount      uint          `json:"max_chats_count,omitempty"`
-	AwaitingApproval   bool          `json:"awaiting_approval,omitempty"`
-	Groups             []GroupConfig `json:"groups,omitempty"`
-	WorkScheduler      WorkScheduler `json:"work_scheduler,omitempty"`
-	Notifications      []string      `json:"notifications,omitempty"`
-	EmailSubscriptions []string      `json:"email_subscriptions,omitempty"`
+	Name               string         `json:"name,omitempty"`
+	Role               string         `json:"role,omitempty"`
+	Avatar             string         `json:"avatar,omitempty"`
+	JobTitle           string         `json:"job_title,omitempty"`
+	Mobile             string         `json:"mobile,omitempty"`
+	MaxChatsCount      uint           `json:"max_chats_count,omitempty"`
+	AwaitingApproval   bool           `json:"awaiting_approval,omitempty"`
+	Groups             []GroupConfig  `json:"groups,omitempty"`
+	WorkScheduler      *WorkScheduler `json:"work_scheduler,omitempty"`
+	Notifications      []string       `json:"notifications,omitempty"`
+	EmailSubscriptions []string       `json:"email_subscriptions,omitempty"`
 }
 
 // WorkScheduler represents work schedule data
