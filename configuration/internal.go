@@ -102,8 +102,8 @@ type getAgentRequest struct {
 type getAgentResponse *Agent
 
 type listAgentsRequest struct {
-	Filters AgentsFilters `json:"filters,omitempty"`
-	Fields  []string      `json:"fields,omitempty"`
+	Filters *AgentsFilters `json:"filters,omitempty"`
+	Fields  []string       `json:"fields,omitempty"`
 }
 
 type listAgentsResponse []*Agent
