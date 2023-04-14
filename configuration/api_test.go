@@ -435,7 +435,7 @@ func TestCreateBotShouldReturnDataReceivedFromConfApi(t *testing.T) {
 		t.Error("API creation failed")
 	}
 
-	botID, rErr := api.CreateBot("John Doe", "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg", 6, "first", []*configuration.GroupConfig{}, "dummy_client_id", "dummy/timezone", configuration.WorkScheduler{})
+	botID, rErr := api.CreateBot("John Doe", "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg", 6, "first", []*configuration.GroupConfig{}, "dummy_client_id", "dummy/timezone", &configuration.WorkScheduler{})
 	if rErr != nil {
 		t.Errorf("CreateBot failed: %v", rErr)
 	}
@@ -454,7 +454,7 @@ func TestCreateBotShouldReturnErrorForInvalidInput(t *testing.T) {
 	}
 
 	groups := []*configuration.GroupConfig{{Priority: "supervisor"}}
-	_, rErr := api.CreateBot("John Doe", "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg", 6, "first", groups, "dummy_client_id", "dummy/timezone", configuration.WorkScheduler{})
+	_, rErr := api.CreateBot("John Doe", "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg", 6, "first", groups, "dummy_client_id", "dummy/timezone", &configuration.WorkScheduler{})
 	if rErr.Error() != "DoNotAssign priority is allowed only as default group priority" {
 		t.Errorf("CreateBot failed: %v", rErr)
 	}
@@ -468,7 +468,7 @@ func TestUpdateBotShouldReturnDataReceivedFromConfApi(t *testing.T) {
 		t.Error("API creation failed")
 	}
 
-	rErr := api.UpdateBot("pqi8oasdjahuakndw9nsad9na", "John Doe", "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg", 6, "first", []*configuration.GroupConfig{}, "dummy/timezone", configuration.WorkScheduler{})
+	rErr := api.UpdateBot("pqi8oasdjahuakndw9nsad9na", "John Doe", "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg", 6, "first", []*configuration.GroupConfig{}, "dummy/timezone", &configuration.WorkScheduler{})
 	if rErr != nil {
 		t.Errorf("UpdateBot failed: %v", rErr)
 	}
@@ -483,7 +483,7 @@ func TestUpdateBotShouldReturnErrorForInvalidInput(t *testing.T) {
 	}
 
 	groups := []*configuration.GroupConfig{{Priority: "supervisor"}}
-	rErr := api.UpdateBot("pqi8oasdjahuakndw9nsad9na", "John Doe", "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg", 6, "first", groups, "dummy/timezone", configuration.WorkScheduler{})
+	rErr := api.UpdateBot("pqi8oasdjahuakndw9nsad9na", "John Doe", "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg", 6, "first", groups, "dummy/timezone", &configuration.WorkScheduler{})
 	if rErr.Error() != "DoNotAssign priority is allowed only as default group priority" {
 		t.Errorf("CreateBot failed: %v", rErr)
 	}

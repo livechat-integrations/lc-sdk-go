@@ -182,7 +182,7 @@ type Chat struct {
 	ID         string     `json:"id,omitempty"`
 	Properties Properties `json:"properties,omitempty"`
 	Access     *Access    `json:"access,omitempty"`
-	Thread     Thread     `json:"thread,omitempty"`
+	Thread     *Thread    `json:"thread,omitempty"`
 	Threads    []Thread   `json:"threads,omitempty"`
 	IsFollowed bool       `json:"is_followed,omitempty"`
 	Agents     map[string]*Agent
@@ -307,7 +307,7 @@ type Customer struct {
 type Queue struct {
 	Position int       `json:"position"`
 	WaitTime int       `json:"wait_time"`
-	QueuedAt time.Time `json:"queued_at,omitempty"`
+	QueuedAt time.Time `json:"queued_at"`
 }
 
 // ThreadSummary represents a short summary of a thread
@@ -411,7 +411,7 @@ type eventSpecific struct {
 type Event struct {
 	ID         string     `json:"id,omitempty"`
 	CustomID   string     `json:"custom_id,omitempty"`
-	CreatedAt  time.Time  `json:"created_at,omitempty"`
+	CreatedAt  time.Time  `json:"created_at"`
 	AuthorID   string     `json:"author_id"`
 	Properties Properties `json:"properties,omitempty"`
 	Visibility string     `json:"visibility,omitempty"`
