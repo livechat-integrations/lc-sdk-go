@@ -2,7 +2,9 @@ package configuration_test
 
 import (
 	"bytes"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -10,15 +12,49 @@ import (
 	"github.com/livechat/lc-sdk-go/v6/configuration"
 )
 
-type roundTripFunc func(req *http.Request) *http.Response
+const (
+	ExpectedNewGroupID          = 19
+	ExpectedNewAutoAccessID     = "pqi8oasdjahuakndw9nsad9na"
+	ExpectedPropertiesNamespace = "0805e283233042b37f460ed8fbf22160"
+)
 
-func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
-	return f(req), nil
+type serverMock struct {
+	LastRequest *http.Request
+	Method      string
 }
 
-func NewTestClient(fn roundTripFunc) *http.Client {
+func (s *serverMock) RoundTrip(req *http.Request) (*http.Response, error) {
+	s.LastRequest = req
+	if responseNOK := s.validateCommon(req); responseNOK != nil {
+		return responseNOK, nil
+	}
+	return getMockResponseOK(s.Method), nil
+}
+
+// Performs validation of common parameters. Returns nil if everything is OK.
+// Does not validate body of the request which is specific for each method.
+func (s *serverMock) validateCommon(req *http.Request) *http.Response {
+	if req.URL.String() != "https://api.livechatinc.com/v3.6/configuration/action/"+s.Method {
+		return getMockResponseNOK("Invalid URL")
+	}
+
+	if req.Method != "POST" {
+		return getMockResponseNOK("Invalid URL")
+	}
+
+	if authHeader := req.Header.Get("Authorization"); authHeader != "Bearer access_token" {
+		return getMockResponseNOK("Invalid Authorization")
+	}
+
+	if regionHeader := req.Header.Get("X-Region"); regionHeader != "region" {
+		return getMockResponseNOK("Invalid X-Region")
+	}
+	return nil
+}
+
+func NewTestClient(s *serverMock) *http.Client {
 	return &http.Client{
-		Transport: roundTripFunc(fn),
+		Transport: s,
 	}
 }
 
@@ -62,18 +98,18 @@ var mockedResponses = map[string]string{
 		{
 			"id": "5c9871d5372c824cbf22d860a707a578",
 			"name": "John Doe",
-			"avatar_path": "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg"
+			"avatar": "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg"
 		},
 		{
 			"id": "8g1231ss112c013cbf11d530b595h987",
 			"name": "Jason Brown",
-			"avatar_path": "livechat.s3.amazonaws.com/1011121/all/avatars/wff9482gkdjanzjgdsf88a184jsskaz1.jpg"
+			"avatar": "livechat.s3.amazonaws.com/1011121/all/avatars/wff9482gkdjanzjgdsf88a184jsskaz1.jpg"
 		}
 	]`,
 	"get_bot": `{
 		"id": "5c9871d5372c824cbf22d860a707a578",
 		"name": "John Doe",
-		"avatar_path": "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg",
+		"avatar": "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg",
 		"default_group_priority": "first",
 		"owner_client_id": "asXdesldiAJSq9padj",
 		"max_chats_count": 6,
@@ -111,11 +147,11 @@ var mockedResponses = map[string]string{
 			"default_value": "hi"
 		}
 	}`,
-	"list_license_properties": `{
-		"0805e283233042b37f460ed8fbf22160": {
+	"list_license_properties": fmt.Sprintf(`{
+		"%s": {
 				"string_property": "string value"
 		}
-	}`,
+	}`, ExpectedPropertiesNamespace),
 	"create_agent": `{
 		"id": "smith@example.com"
 	}`,
@@ -123,7 +159,7 @@ var mockedResponses = map[string]string{
 		"id": "smith@example.com",
 		"account_id": "d24fa41e-bc16-41b8-a15b-9ca45ff7e0cf",
 		"name": "Agent Smith",
-		"avatar_path": "https://domain.com/avatar.image.jpg",
+		"avatar": "https://domain.com/avatar.image.jpg",
 		"role": "administrator",
 		"login_status": "accepting chats"
 	}`,
@@ -155,9 +191,9 @@ var mockedResponses = map[string]string{
 	"unsuspend_agent":            `{}`,
 	"request_agent_unsuspension": `{}`,
 	"approve_agent":              `{}`,
-	"create_group": `{
-		"id": 19
-	}`,
+	"create_group": fmt.Sprintf(`{
+		"id": %d
+	}`, ExpectedNewGroupID),
 	"update_group": `{}`,
 	"delete_group": `{}`,
 	"list_groups": `[
@@ -218,7 +254,7 @@ var mockedResponses = map[string]string{
 	"delete_group_properties":   `{}`,
 	"update_license_properties": `{}`,
 	"update_group_properties":   `{}`,
-	"add_auto_access":           `{ "id": "pqi8oasdjahuakndw9nsad9na" }`,
+	"add_auto_access":           fmt.Sprintf(`{ "id": "%s" }`, ExpectedNewAutoAccessID),
 	"delete_auto_access":        `{}`,
 	"update_auto_access":        `{}`,
 	"list_auto_accesses": `[
@@ -318,50 +354,43 @@ var mockedResponses = map[string]string{
 	"reactivate_email": `{}`,
 }
 
-func createMockedResponder(t *testing.T, method string) roundTripFunc {
-	return func(req *http.Request) *http.Response {
-		createServerError := func(message string) *http.Response {
-			responseError := `{
-				"error": {
-					"type": "MOCK_SERVER_ERROR",
-					"message": "` + message + `"
-				}
-			}`
+func getMockResponseOK(method string) *http.Response {
+	return &http.Response{
+		StatusCode: http.StatusOK,
+		Body:       io.NopCloser(bytes.NewBufferString(mockedResponses[method])),
+		Header:     make(http.Header),
+	}
+}
 
-			return &http.Response{
-				StatusCode: 400,
-				Body:       io.NopCloser(bytes.NewBufferString(responseError)),
-				Header:     make(http.Header),
+func getMockResponseNOK(message string) *http.Response {
+	responseError := `{
+			"error": {
+				"type": "MOCK_SERVER_ERROR",
+				"message": "` + message + `"
 			}
-		}
+		}`
+	return &http.Response{
+		StatusCode: 400,
+		Body:       io.NopCloser(bytes.NewBufferString(responseError)),
+		Header:     make(http.Header),
+	}
+}
 
-		if req.URL.String() != "https://api.livechatinc.com/v3.6/configuration/action/"+method {
-			t.Errorf("Invalid URL for Configuration API request: %s", req.URL.String())
-			return createServerError("Invalid URL")
-		}
+func newServerMock(t *testing.T, method string) *serverMock {
+	return &serverMock{
+		Method: method}
+}
 
-		if req.Method != "POST" {
-			t.Errorf("Invalid method: %s for Configuration API action: %s", req.Method, method)
-			return createServerError("Invalid URL")
-		}
+func validateRequestBody(t *testing.T, want string, got io.ReadCloser) {
+	t.Helper()
 
-		if authHeader := req.Header.Get("Authorization"); authHeader != "Bearer access_token" {
-			t.Errorf("Invalid Authorization header: %s", authHeader)
-			return createServerError("Invalid Authorization")
-		}
+	body, err := ioutil.ReadAll(got)
+	if err != nil {
+		t.Errorf("Error reading request body: %s", err)
+	}
 
-		if regionHeader := req.Header.Get("X-Region"); regionHeader != "region" {
-			t.Errorf("Invalid X-Region header: %s", regionHeader)
-			return createServerError("Invalid X-Region")
-		}
-
-		// TODO: validate also req body
-
-		return &http.Response{
-			StatusCode: 200,
-			Body:       io.NopCloser(bytes.NewBufferString(mockedResponses[method])),
-			Header:     make(http.Header),
-		}
+	if string(body) != want {
+		t.Errorf("Request body mismatch\nwant: %s\ngot: %s", want, string(body))
 	}
 }
 
@@ -373,7 +402,7 @@ func TestRejectAPICreationWithoutTokenGetter(t *testing.T) {
 }
 
 func TestRegisterWebhookShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "register_webhook"))
+	client := NewTestClient(newServerMock(t, "register_webhook"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -396,7 +425,7 @@ func TestRegisterWebhookShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestListWebhooksShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "list_webhooks"))
+	client := NewTestClient(newServerMock(t, "list_webhooks"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -414,7 +443,7 @@ func TestListWebhooksShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestUnregisterWebhookShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "unregister_webhook"))
+	client := NewTestClient(newServerMock(t, "unregister_webhook"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -427,70 +456,149 @@ func TestUnregisterWebhookShouldReturnDataReceivedFromConfApi(t *testing.T) {
 	}
 }
 
-func TestCreateBotShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "create_bot"))
+func TestCreateBotOK(t *testing.T) {
+	serverMock := newServerMock(t, "create_bot")
+	client := NewTestClient(serverMock)
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
 		t.Error("API creation failed")
 	}
 
-	botID, rErr := api.CreateBot("John Doe", "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg", 6, "first", []*configuration.GroupConfig{}, "dummy_client_id", "dummy/timezone", &configuration.WorkScheduler{})
-	if rErr != nil {
-		t.Errorf("CreateBot failed: %v", rErr)
+	checkAPIrespondedOK := func(t *testing.T, botID string, rErr error) {
+		t.Helper()
+		if rErr != nil {
+			t.Errorf("CreateBot failed: %v", rErr)
+		}
+		if botID != "5c9871d5372c824cbf22d860a707a578" {
+			t.Errorf("Invalid botID: %v", botID)
+		}
 	}
 
-	if botID != "5c9871d5372c824cbf22d860a707a578" {
-		t.Errorf("Invalid botID: %v", botID)
-	}
+	t.Run("Only required fields", func(t *testing.T) {
+		botID, rErr := api.CreateBot("John Doe", nil)
+		wantReq := `{"name":"John Doe"}`
+
+		checkAPIrespondedOK(t, botID, rErr)
+		validateRequestBody(t, wantReq, serverMock.LastRequest.Body)
+	})
+
+	t.Run("All optional fields", func(t *testing.T) {
+		botID, rErr := api.CreateBot("John Doe", &configuration.CreateBotRequestOptions{
+			Avatar: "https://example.com/avatar.png",
+			Groups: []configuration.GroupConfig{
+				{ID: 6, Priority: "first"},
+			},
+			OwnerClientID: "dummy_client_id",
+			WorkScheduler: &configuration.WorkScheduler{
+				Timezone: "dummy/timezone",
+				Schedule: []configuration.Schedule{
+					{
+						Enabled: true,
+						Day:     "monday",
+						Start:   "09:00",
+						End:     "17:00",
+					},
+				},
+			},
+		})
+		wantReq := `{"name":"John Doe","avatar":"https://example.com/avatar.png","groups":[{"id":6,"priority":"first"}],"owner_client_id":"dummy_client_id","work_scheduler":{"timezone":"dummy/timezone","schedule":[{"enabled":true,"day":"monday","start":"09:00","end":"17:00"}]}}`
+
+		checkAPIrespondedOK(t, botID, rErr)
+		validateRequestBody(t, wantReq, serverMock.LastRequest.Body)
+	})
+
+	t.Run("No work scheduler provided", func(t *testing.T) {
+		botID, rErr := api.CreateBot("John Doe", &configuration.CreateBotRequestOptions{
+			Avatar: "https://example.com/avatar.png",
+		})
+		wantReq := `{"name":"John Doe","avatar":"https://example.com/avatar.png"}`
+
+		checkAPIrespondedOK(t, botID, rErr)
+		validateRequestBody(t, wantReq, serverMock.LastRequest.Body)
+	})
+
 }
 
 func TestCreateBotShouldReturnErrorForInvalidInput(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "create_bot"))
+	client := NewTestClient(newServerMock(t, "create_bot"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
 		t.Error("API creation failed")
 	}
 
-	groups := []*configuration.GroupConfig{{Priority: "supervisor"}}
-	_, rErr := api.CreateBot("John Doe", "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg", 6, "first", groups, "dummy_client_id", "dummy/timezone", &configuration.WorkScheduler{})
+	_, rErr := api.CreateBot("John Doe", &configuration.CreateBotRequestOptions{Avatar: "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg", Groups: []configuration.GroupConfig{{6, "supervisor"}}, OwnerClientID: "dummy_client_id", WorkScheduler: &configuration.WorkScheduler{Timezone: "dummy/timezone"}})
 	if rErr.Error() != "DoNotAssign priority is allowed only as default group priority" {
 		t.Errorf("CreateBot failed: %v", rErr)
 	}
 }
 
-func TestUpdateBotShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "update_bot"))
+func TestUpdateBotOK(t *testing.T) {
+	serverMock := newServerMock(t, "update_bot")
+	client := NewTestClient(serverMock)
+
+	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
+	if err != nil {
+		t.Error("API creation failed")
+	}
+	t.Run("Only required fields", func(t *testing.T) {
+		if rErr := api.UpdateBot("pqi8oasdjahuakndw9nsad9na", nil); rErr != nil {
+			t.Errorf("UpdateBot failed: %v", rErr)
+		}
+		validateRequestBody(t, `{"id":"pqi8oasdjahuakndw9nsad9na"}`, serverMock.LastRequest.Body)
+	})
+	t.Run("No work scheduler provided", func(t *testing.T) {
+		if rErr := api.UpdateBot("pqi8oasdjahuakndw9nsad9na", &configuration.UpdateBotRequestOptions{
+			Avatar: "https://example.com/avatar.png",
+		}); rErr != nil {
+			t.Errorf("UpdateBot failed: %v", rErr)
+		}
+		validateRequestBody(t, `{"id":"pqi8oasdjahuakndw9nsad9na","avatar":"https://example.com/avatar.png"}`, serverMock.LastRequest.Body)
+	})
+	t.Run("All optional fields", func(t *testing.T) {
+		if rErr := api.UpdateBot("pqi8oasdjahuakndw9nsad9na", &configuration.UpdateBotRequestOptions{
+			Avatar: "https://example.com/avatar.png",
+			Groups: []configuration.GroupConfig{
+				{ID: 6, Priority: "first"},
+			},
+			OwnerClientID: "dummy_client_id",
+			WorkScheduler: &configuration.WorkScheduler{
+				Timezone: "dummy/timezone",
+				Schedule: []configuration.Schedule{
+					{
+						Enabled: true,
+						Day:     "monday",
+						Start:   "09:00",
+						End:     "17:00",
+					},
+				},
+			},
+		}); rErr != nil {
+			t.Errorf("UpdateBot failed: %v", rErr)
+		}
+		validateRequestBody(t, `{"id":"pqi8oasdjahuakndw9nsad9na","avatar":"https://example.com/avatar.png","groups":[{"id":6,"priority":"first"}],"owner_client_id":"dummy_client_id","work_scheduler":{"timezone":"dummy/timezone","schedule":[{"enabled":true,"day":"monday","start":"09:00","end":"17:00"}]}}`, serverMock.LastRequest.Body)
+	})
+
+}
+
+func TestUpdateBotShouldReturnErrorForInvalidInput(t *testing.T) {
+	client := NewTestClient(newServerMock(t, "update_bot"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
 		t.Error("API creation failed")
 	}
 
-	rErr := api.UpdateBot("pqi8oasdjahuakndw9nsad9na", "John Doe", "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg", 6, "first", []*configuration.GroupConfig{}, "dummy/timezone", &configuration.WorkScheduler{})
-	if rErr != nil {
+	groups := []configuration.GroupConfig{{Priority: "supervisor"}}
+	rErr := api.UpdateBot("pqi8oasdjahuakndw9nsad9na", &configuration.UpdateBotRequestOptions{Groups: groups})
+	if rErr.Error() != "DoNotAssign priority is allowed only as default group priority" {
 		t.Errorf("UpdateBot failed: %v", rErr)
 	}
 }
 
-func TestUpdateBotShouldReturnErrorForInvalidInput(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "update_bot"))
-
-	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
-	if err != nil {
-		t.Error("API creation failed")
-	}
-
-	groups := []*configuration.GroupConfig{{Priority: "supervisor"}}
-	rErr := api.UpdateBot("pqi8oasdjahuakndw9nsad9na", "John Doe", "livechat.s3.amazonaws.com/1011121/all/avatars/bdd8924fcbcdbddbeaf60c19b238b0b0.jpg", 6, "first", groups, "dummy/timezone", &configuration.WorkScheduler{})
-	if rErr.Error() != "DoNotAssign priority is allowed only as default group priority" {
-		t.Errorf("CreateBot failed: %v", rErr)
-	}
-}
-
 func TestDeleteBotShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "delete_bot"))
+	client := NewTestClient(newServerMock(t, "delete_bot"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -504,7 +612,7 @@ func TestDeleteBotShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestListBotsShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "list_bots"))
+	client := NewTestClient(newServerMock(t, "list_bots"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -530,7 +638,7 @@ func TestListBotsShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestGetBotShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "get_bot"))
+	client := NewTestClient(newServerMock(t, "get_bot"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -548,7 +656,7 @@ func TestGetBotShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestRegisterPropertyShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "register_property"))
+	client := NewTestClient(newServerMock(t, "register_property"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -575,7 +683,7 @@ func TestRegisterPropertyShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestUnregisterPropertyShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "unregister_property"))
+	client := NewTestClient(newServerMock(t, "unregister_property"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -589,7 +697,7 @@ func TestUnregisterPropertyShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestPublishPropertyShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "publish_property"))
+	client := NewTestClient(newServerMock(t, "publish_property"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -603,7 +711,7 @@ func TestPublishPropertyShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestListPropertiesShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "list_properties"))
+	client := NewTestClient(newServerMock(t, "list_properties"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -621,30 +729,47 @@ func TestListPropertiesShouldReturnDataReceivedFromConfApi(t *testing.T) {
 	}
 }
 
-func TestListLicensePropertiesShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "list_license_properties"))
+func TestListLicensePropertiesOK(t *testing.T) {
+	serverMock := newServerMock(t, "list_license_properties")
+	client := NewTestClient(serverMock)
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
 		t.Error("API creation failed")
 	}
 
-	resp, rErr := api.ListLicenseProperties("", "")
-	if rErr != nil {
-		t.Errorf("ListLicenseProperties failed: %v", rErr)
+	checkAPIrespondedOK := func(t *testing.T, resp configuration.Properties, rErr error) {
+		t.Helper()
+		if rErr != nil {
+			t.Errorf("ListLicenseProperties failed: %v", rErr)
+		}
+		if len(resp) != 1 {
+			t.Errorf("Invalid license properties: %v", resp)
+		}
+
+		if resp[ExpectedPropertiesNamespace]["string_property"] != "string value" {
+			t.Errorf("Invalid license property %s.string_property: %v", ExpectedPropertiesNamespace, resp[ExpectedPropertiesNamespace]["string_property"])
+		}
 	}
 
-	if len(resp) != 1 {
-		t.Errorf("Invalid license properties: %v", resp)
-	}
+	t.Run("No optional fields", func(t *testing.T) {
+		resp, rErr := api.ListLicenseProperties(nil)
+		checkAPIrespondedOK(t, resp, rErr)
+		validateRequestBody(t, "{}", serverMock.LastRequest.Body)
+	})
+	t.Run("With optional fields", func(t *testing.T) {
+		resp, rErr := api.ListLicenseProperties(&configuration.ListLicensePropertiesRequestOptions{
+			Namespace:  "namespace",
+			NamePrefix: "prefix",
+		})
+		checkAPIrespondedOK(t, resp, rErr)
+		validateRequestBody(t, `{"namespace":"namespace","name_prefix":"prefix"}`, serverMock.LastRequest.Body)
+	})
 
-	if resp["0805e283233042b37f460ed8fbf22160"]["string_property"] != "string value" {
-		t.Errorf("Invalid license property 0805e283233042b37f460ed8fbf22160.string_property: %v", resp["0805e283233042b37f460ed8fbf22160"]["string_property"])
-	}
 }
 
 func TestCreateAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "create_agent"))
+	client := NewTestClient(newServerMock(t, "create_agent"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -662,7 +787,7 @@ func TestCreateAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestGetAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "get_agent"))
+	client := NewTestClient(newServerMock(t, "get_agent"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -688,7 +813,7 @@ func TestGetAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestListAgentsShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "list_agents"))
+	client := NewTestClient(newServerMock(t, "list_agents"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -722,7 +847,7 @@ func TestListAgentsShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestUpdateAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "update_agent"))
+	client := NewTestClient(newServerMock(t, "update_agent"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -736,7 +861,7 @@ func TestUpdateAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestDeleteAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "delete_agent"))
+	client := NewTestClient(newServerMock(t, "delete_agent"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -750,7 +875,7 @@ func TestDeleteAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestSuspendAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "suspend_agent"))
+	client := NewTestClient(newServerMock(t, "suspend_agent"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -764,7 +889,7 @@ func TestSuspendAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestUnsuspendAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "unsuspend_agent"))
+	client := NewTestClient(newServerMock(t, "unsuspend_agent"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -778,7 +903,7 @@ func TestUnsuspendAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestRequestAgentUnsuspensionShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "request_agent_unsuspension"))
+	client := NewTestClient(newServerMock(t, "request_agent_unsuspension"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -792,7 +917,7 @@ func TestRequestAgentUnsuspensionShouldReturnDataReceivedFromConfApi(t *testing.
 }
 
 func TestApproveAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "approve_agent"))
+	client := NewTestClient(newServerMock(t, "approve_agent"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -805,40 +930,82 @@ func TestApproveAgentShouldReturnDataReceivedFromConfApi(t *testing.T) {
 	}
 }
 
-func TestCreateGroupShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "create_group"))
+func TestCreateGroupOK(t *testing.T) {
+	serverMock := newServerMock(t, "create_group")
+	client := NewTestClient(serverMock)
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
 		t.Error("API creation failed")
 	}
 
-	groupID, rErr := api.CreateGroup("name", "en", map[string]configuration.GroupPriority{})
-	if rErr != nil {
-		t.Errorf("GetGroup failed: %v", rErr)
+	checkAPIrespondedOK := func(t *testing.T, groupID int32, rErr error) {
+		t.Helper()
+		if rErr != nil {
+			t.Errorf("CreateGroup failed: %v", rErr)
+		}
+		if groupID != ExpectedNewGroupID {
+			t.Errorf("Invalid group id: %v", groupID)
+		}
 	}
 
-	if groupID != 19 {
-		t.Errorf("Invalid group id: %v", groupID)
-	}
+	t.Run("Only required fields", func(t *testing.T) {
+		groupID, rErr := api.CreateGroup("name", map[string]configuration.GroupPriority{}, nil)
+		checkAPIrespondedOK(t, groupID, rErr)
+		validateRequestBody(t, `{"name":"name","agent_priorities":{}}`, serverMock.LastRequest.Body)
+	})
+
+	t.Run("Required and optional fields", func(t *testing.T) {
+		groupID, rErr := api.CreateGroup("name", map[string]configuration.GroupPriority{}, &configuration.CreateGroupRequestOptions{
+			LanguageCode: "en",
+		})
+		checkAPIrespondedOK(t, groupID, rErr)
+		validateRequestBody(t, `{"name":"name","agent_priorities":{},"language_code":"en"}`, serverMock.LastRequest.Body)
+	})
 }
 
-func TestUpdateGroupShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "update_group"))
+func TestUpdateGroupOK(t *testing.T) {
+	serverMock := newServerMock(t, "update_group")
+	client := NewTestClient(serverMock)
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
 		t.Error("API creation failed")
 	}
 
-	rErr := api.UpdateGroup(11, "name", "en", map[string]configuration.GroupPriority{})
-	if rErr != nil {
-		t.Errorf("UpdateGroup failed: %v", rErr)
-	}
+	t.Run("Only required fields", func(t *testing.T) {
+		rErr := api.UpdateGroup(420, nil)
+		if rErr != nil {
+			t.Errorf("UpdateGroup failed: %v", rErr)
+		}
+		validateRequestBody(t, `{"id":420}`, serverMock.LastRequest.Body)
+	})
+	t.Run("Only name", func(t *testing.T) {
+		rErr := api.UpdateGroup(420, &configuration.UpdateGroupRequestOptions{
+			Name: "Foo",
+		})
+		if rErr != nil {
+			t.Errorf("UpdateGroup failed: %v", rErr)
+		}
+		validateRequestBody(t, `{"id":420,"name":"Foo"}`, serverMock.LastRequest.Body)
+	})
+	t.Run("Required and optional fields", func(t *testing.T) {
+		rErr := api.UpdateGroup(420, &configuration.UpdateGroupRequestOptions{
+			Name:         "Foo",
+			LanguageCode: "en",
+			AgentPriorities: map[string]configuration.GroupPriority{
+				"foo": configuration.First,
+			},
+		})
+		if rErr != nil {
+			t.Errorf("UpdateGroup failed: %v", rErr)
+		}
+		validateRequestBody(t, `{"id":420,"name":"Foo","language_code":"en","agent_priorities":{"foo":"first"}}`, serverMock.LastRequest.Body)
+	})
 }
 
 func TestDeleteGroupShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "delete_group"))
+	client := NewTestClient(newServerMock(t, "delete_group"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -852,7 +1019,7 @@ func TestDeleteGroupShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 }
 
 func TestListGroupsShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "list_groups"))
+	client := NewTestClient(newServerMock(t, "list_groups"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -872,13 +1039,13 @@ func TestListGroupsShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 		t.Errorf("Invalid group ID: %v", groups[0].ID)
 	}
 
-	if groups[1].ID != 19 {
+	if groups[1].ID != ExpectedNewGroupID {
 		t.Errorf("Invalid group ID: %v", groups[1].ID)
 	}
 }
 
 func TestGetGroupShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "get_group"))
+	client := NewTestClient(newServerMock(t, "get_group"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -900,7 +1067,7 @@ func TestGetGroupShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 }
 
 func TestListWebhookNamesShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "list_webhook_names"))
+	client := NewTestClient(newServerMock(t, "list_webhook_names"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -922,7 +1089,7 @@ func TestListWebhookNamesShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 }
 
 func TestEnableLicenseWebhooksShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "enable_license_webhooks"))
+	client := NewTestClient(newServerMock(t, "enable_license_webhooks"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -936,7 +1103,7 @@ func TestEnableLicenseWebhooksShouldReturnDataReceivedFromConfAPI(t *testing.T) 
 }
 
 func TestDisableLicenseWebhooksShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "disable_license_webhooks"))
+	client := NewTestClient(newServerMock(t, "disable_license_webhooks"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -950,7 +1117,7 @@ func TestDisableLicenseWebhooksShouldReturnDataReceivedFromConfAPI(t *testing.T)
 }
 
 func TestGetLicenseWebhooksStateShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "get_license_webhooks_state"))
+	client := NewTestClient(newServerMock(t, "get_license_webhooks_state"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -967,7 +1134,7 @@ func TestGetLicenseWebhooksStateShouldReturnDataReceivedFromConfAPI(t *testing.T
 }
 
 func TestDeleteLicensePropertiesShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "delete_license_properties"))
+	client := NewTestClient(newServerMock(t, "delete_license_properties"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -981,7 +1148,7 @@ func TestDeleteLicensePropertiesShouldReturnDataReceivedFromConfAPI(t *testing.T
 }
 
 func TestDeleteGroupPropertiesShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "delete_group_properties"))
+	client := NewTestClient(newServerMock(t, "delete_group_properties"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -995,7 +1162,7 @@ func TestDeleteGroupPropertiesShouldReturnDataReceivedFromConfAPI(t *testing.T) 
 }
 
 func TestUpdateLicensePropertiesShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "update_license_properties"))
+	client := NewTestClient(newServerMock(t, "update_license_properties"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -1009,7 +1176,7 @@ func TestUpdateLicensePropertiesShouldReturnDataReceivedFromConfAPI(t *testing.T
 }
 
 func TestUpdateGroupPropertiesShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "update_group_properties"))
+	client := NewTestClient(newServerMock(t, "update_group_properties"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -1022,40 +1189,84 @@ func TestUpdateGroupPropertiesShouldReturnDataReceivedFromConfAPI(t *testing.T) 
 	}
 }
 
-func TestAddAutoAccessShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "add_auto_access"))
+func TestAddAutoAccessOK(t *testing.T) {
+	serverMock := newServerMock(t, "add_auto_access")
+	client := NewTestClient(serverMock)
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
 		t.Error("API creation failed")
 	}
-
-	resp, err := api.AddAutoAccess([]int{}, nil, nil, nil, "", "")
-	if err != nil {
-		t.Errorf("AddAutoAccess failed: %v", err)
+	checkAPIrespondedOK := func(t *testing.T, resp string, rErr error) {
+		t.Helper()
+		if rErr != nil {
+			t.Errorf("AddAutoAccess failed: %v", rErr)
+		}
+		if resp != ExpectedNewAutoAccessID {
+			t.Errorf("Invalid new auto access ID obtained: %v", resp)
+		}
 	}
+	t.Run("only required fields", func(t *testing.T) {
+		resp, err := api.AddAutoAccess(configuration.Access{[]int{}}, configuration.AutoAccessConditions{}, nil)
+		checkAPIrespondedOK(t, resp, err)
+		validateRequestBody(t, `{"access":{"groups":[]},"conditions":{}}`, serverMock.LastRequest.Body)
+	})
+	t.Run("required and optional fields", func(t *testing.T) {
+		resp, err := api.AddAutoAccess(configuration.Access{[]int{}}, configuration.AutoAccessConditions{}, &configuration.AddAutoAccessRequestOptions{Description: "foo"})
+		checkAPIrespondedOK(t, resp, err)
+		validateRequestBody(t, `{"access":{"groups":[]},"conditions":{},"description":"foo"}`, serverMock.LastRequest.Body)
+	})
 
-	if resp != "pqi8oasdjahuakndw9nsad9na" {
-		t.Errorf("Invalid response: %v", resp)
-	}
 }
 
-func TestUpdateAutoAccessShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "update_auto_access"))
+func TestUpdateAutoAccessOK(t *testing.T) {
+	serverMock := newServerMock(t, "update_auto_access")
+	client := NewTestClient(serverMock)
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
 		t.Error("API creation failed")
 	}
 
-	err = api.UpdateAutoAccess("foo", []int{}, nil, nil, nil, "", "")
-	if err != nil {
-		t.Errorf("UpdateAutoAccess failed: %v", err)
+	t.Run("only required fields", func(t *testing.T) {
+		err := api.UpdateAutoAccess("foo", nil)
+		if err != nil {
+			t.Errorf("UpdateAutoAccess failed: %v", err)
+		}
+		validateRequestBody(t, `{"id":"foo"}`, serverMock.LastRequest.Body)
+	})
+	t.Run("only description", func(t *testing.T) {
+		err := api.UpdateAutoAccess("foo", &configuration.UpdateAutoAccessRequestOptions{Description: "bar"})
+		if err != nil {
+			t.Errorf("UpdateAutoAccess failed: %v", err)
+		}
+		validateRequestBody(t, `{"id":"foo","description":"bar"}`, serverMock.LastRequest.Body)
+	})
+	t.Run("all optional fields", func(t *testing.T) {
+		err := api.UpdateAutoAccess("foo", &configuration.UpdateAutoAccessRequestOptions{Description: "bar", Access: &configuration.Access{Groups: []int{420}}, Conditions: &configuration.AutoAccessConditions{}, NextID: "baz"})
+		if err != nil {
+			t.Errorf("UpdateAutoAccess failed: %v", err)
+		}
+		validateRequestBody(t, `{"id":"foo","access":{"groups":[420]},"conditions":{},"description":"bar","next_id":"baz"}`, serverMock.LastRequest.Body)
+	})
+
+	updateAutoAccessOKOpts := []*configuration.UpdateAutoAccessRequestOptions{
+		{Description: "baz", Access: &configuration.Access{}, Conditions: &configuration.AutoAccessConditions{}, NextID: "bar"},
+		{Description: "baz"},
+		nil,
+	}
+
+	for _, tt := range updateAutoAccessOKOpts {
+
+		err = api.UpdateAutoAccess("foo", tt)
+		if err != nil {
+			t.Errorf("UpdateAutoAccess failed: %v", err)
+		}
 	}
 }
 
 func TestDeleteAutoAccessShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "delete_auto_access"))
+	client := NewTestClient(newServerMock(t, "delete_auto_access"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -1069,7 +1280,7 @@ func TestDeleteAutoAccessShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 }
 
 func TestListAutoAccessesShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "list_auto_accesses"))
+	client := NewTestClient(newServerMock(t, "list_auto_accesses"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -1111,7 +1322,7 @@ func TestListAutoAccessesShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 }
 
 func TestCheckProductLimitsForPlanShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "check_product_limits_for_plan"))
+	client := NewTestClient(newServerMock(t, "check_product_limits_for_plan"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -1141,7 +1352,7 @@ func TestCheckProductLimitsForPlanShouldReturnDataReceivedFromConfAPI(t *testing
 }
 
 func TestListChannelsShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "list_channels"))
+	client := NewTestClient(newServerMock(t, "list_channels"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -1171,7 +1382,7 @@ func TestListChannelsShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 }
 
 func TestCreateTagShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "create_tag"))
+	client := NewTestClient(newServerMock(t, "create_tag"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -1184,7 +1395,7 @@ func TestCreateTagShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestDeleteTagShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "delete_tag"))
+	client := NewTestClient(newServerMock(t, "delete_tag"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -1197,7 +1408,7 @@ func TestDeleteTagShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestListTagsShouldReturnDataReceivedFromConfAPI(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "list_tags"))
+	client := NewTestClient(newServerMock(t, "list_tags"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -1231,7 +1442,7 @@ func TestListTagsShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 }
 
 func TestUpdateTagShouldReturnDataReceivedFromConfApi(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "update_tag"))
+	client := NewTestClient(newServerMock(t, "update_tag"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
@@ -1244,35 +1455,48 @@ func TestUpdateTagShouldReturnDataReceivedFromConfApi(t *testing.T) {
 }
 
 func TestListGroupsProperties(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "list_groups_properties"))
+	serverMock := newServerMock(t, "list_groups_properties")
+	client := NewTestClient(serverMock)
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {
 		t.Error("API creation failed")
 	}
 
-	resp, rErr := api.ListGroupsProperties("namespace", "prefix,", []int{0, 1})
-
-	if rErr != nil {
-		t.Errorf("ListGroupsProperties failed: %v", rErr)
+	checkAPIrespondedOK := func(t *testing.T, resp []configuration.GroupProperties, rErr error) {
+		t.Helper()
+		if rErr != nil {
+			t.Errorf("ListGroupsProperties failed: %v", rErr)
+		}
+		if len(resp) != 1 {
+			t.Errorf("Invalid response length: %v", len(resp))
+		}
+		if resp[0].ID != 0 {
+			t.Errorf("Invalid response id: %v", resp[0].ID)
+		}
+		if resp[0].Properties["abc"]["a_property"] != "a" {
+			t.Errorf("Invalid response: %v", resp[0].ID)
+		}
 	}
 
-	if len(resp) != 1 {
-		t.Errorf("Invalid response length: %v", len(resp))
-	}
-
-	if resp[0].ID != 0 {
-		t.Errorf("Invalid response id: %v", resp[0].ID)
-	}
-
-	if resp[0].Properties["abc"]["a_property"] != "a" {
-		t.Errorf("Invalid response: %v", resp[0].ID)
-	}
+	t.Run("no options", func(t *testing.T) {
+		resp, rErr := api.ListGroupsProperties([]int{0, 1}, nil)
+		checkAPIrespondedOK(t, resp, rErr)
+		validateRequestBody(t, `{"group_ids":[0,1]}`, serverMock.LastRequest.Body)
+	})
+	t.Run("with optional parameters", func(t *testing.T) {
+		resp, rErr := api.ListGroupsProperties([]int{0, 1}, &configuration.ListGroupsPropertiesRequestOptions{
+			Namespace:  "foo",
+			NamePrefix: "bar",
+		})
+		checkAPIrespondedOK(t, resp, rErr)
+		validateRequestBody(t, `{"group_ids":[0,1],"namespace":"foo","name_prefix":"bar"}`, serverMock.LastRequest.Body)
+	})
 
 }
 
 func TestReactivateEmail(t *testing.T) {
-	client := NewTestClient(createMockedResponder(t, "reactivate_email"))
+	client := NewTestClient(newServerMock(t, "reactivate_email"))
 
 	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
 	if err != nil {

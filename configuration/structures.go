@@ -3,6 +3,16 @@ package configuration
 // Properties represents LiveChat properties in form of property_namespace -> property -> value.
 type Properties map[string]map[string]interface{}
 
+type ListGroupsPropertiesRequestOptions struct {
+	Namespace  string `json:"namespace,omitempty"`
+	NamePrefix string `json:"name_prefix,omitempty"`
+}
+
+type ListLicensePropertiesRequestOptions struct {
+	Namespace  string `json:"namespace,omitempty"`
+	NamePrefix string `json:"name_prefix,omitempty"`
+}
+
 // Webhook represents webhook to be registered
 type Webhook struct {
 	Action         WebhookAction   `json:"action"`
@@ -94,12 +104,33 @@ func (cpf *chatPresenceFilter) WithUserIDs(user_ids []string, inclusive bool) *c
 type Bot struct {
 	ID                   string         `json:"id"`
 	Name                 string         `json:"name,omitempty"`
-	AvatarPath           string         `json:"avatar_path,omitempty"`
+	Avatar               string         `json:"avatar,omitempty"`
 	DefaultGroupPriority GroupPriority  `json:"default_group_priority,omitempty"`
 	ClientID             string         `json:"owner_client_id,omitempty"`
 	MaxChatsCount        uint           `json:"max_chats_count,omitempty"`
-	Groups               []*GroupConfig `json:"groups,omitempty"`
+	Groups               []GroupConfig  `json:"groups,omitempty"`
 	JobTitle             string         `json:"job_title,omitempty"`
+	WorkScheduler        *WorkScheduler `json:"work_scheduler,omitempty"`
+}
+
+type CreateBotRequestOptions struct {
+	Avatar               string         `json:"avatar,omitempty"`
+	DefaultGroupPriority GroupPriority  `json:"default_group_priority,omitempty"`
+	JobTitle             string         `json:"job_title,omitempty"`
+	MaxChatsCount        *uint          `json:"max_chats_count,omitempty"`
+	Groups               []GroupConfig  `json:"groups,omitempty"`
+	OwnerClientID        string         `json:"owner_client_id,omitempty"`
+	WorkScheduler        *WorkScheduler `json:"work_scheduler,omitempty"`
+}
+
+type UpdateBotRequestOptions struct {
+	Name                 string         `json:"name,omitempty"`
+	Avatar               string         `json:"avatar,omitempty"`
+	DefaultGroupPriority GroupPriority  `json:"default_group_priority,omitempty"`
+	JobTitle             string         `json:"job_title,omitempty"`
+	MaxChatsCount        *uint          `json:"max_chats_count,omitempty"`
+	Groups               []GroupConfig  `json:"groups,omitempty"`
+	OwnerClientID        string         `json:"owner_client_id,omitempty"`
 	WorkScheduler        *WorkScheduler `json:"work_scheduler,omitempty"`
 }
 
@@ -140,6 +171,16 @@ type Group struct {
 	RoutingStatus   string                   `json:"routing_status"`
 }
 
+type CreateGroupRequestOptions struct {
+	LanguageCode string `json:"language_code,omitempty"`
+}
+
+type UpdateGroupRequestOptions struct {
+	Name            string                   `json:"name,omitempty"`
+	LanguageCode    string                   `json:"language_code,omitempty"`
+	AgentPriorities map[string]GroupPriority `json:"agent_priorities,omitempty"`
+}
+
 // Agent defines basic Agent information
 type Agent struct {
 	ID         string `json:"id"`
@@ -161,6 +202,13 @@ type AgentFields struct {
 	WorkScheduler      *WorkScheduler `json:"work_scheduler,omitempty"`
 	Notifications      []string       `json:"notifications,omitempty"`
 	EmailSubscriptions []string       `json:"email_subscriptions,omitempty"`
+}
+
+// AutoAccessConditions must have at least one of Url, Domain or Geolocation set
+type AutoAccessConditions struct {
+	Url         *Condition            `json:"url,omitempty"`
+	Domain      *Condition            `json:"domain,omitempty"`
+	Geolocation *GeolocationCondition `json:"geolocation,omitempty"`
 }
 
 // WorkScheduler represents work schedule data
@@ -228,11 +276,13 @@ type GeolocationMatch struct {
 	City        string `json:"city,omitempty"`
 }
 
+type Access struct {
+	Groups []int `json:"groups"`
+}
+
 type AutoAccess struct {
-	ID     string `json:"id"`
-	Access struct {
-		Groups []int `json:"groups"`
-	} `json:"access"`
+	ID         string `json:"id"`
+	Access     Access `json:"access"`
 	Conditions struct {
 		Url         *Condition            `json:"url,omitempty"`
 		Domain      *Condition            `json:"domain,omitempty"`
@@ -240,6 +290,18 @@ type AutoAccess struct {
 	} `json:"conditions"`
 	Description string `json:"description,omitempty"`
 	NextID      string `json:"next_id,omitempty"`
+}
+
+type AddAutoAccessRequestOptions struct {
+	Description string `json:"description,omitempty"`
+	NextID      string `json:"next_id,omitempty"`
+}
+
+type UpdateAutoAccessRequestOptions struct {
+	Access      *Access               `json:"access,omitempty"`
+	Conditions  *AutoAccessConditions `json:"conditions,omitempty"`
+	Description string                `json:"description,omitempty"`
+	NextID      string                `json:"next_id,omitempty"`
 }
 
 type PlanLimits []struct {

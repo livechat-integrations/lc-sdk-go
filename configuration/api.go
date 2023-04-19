@@ -84,42 +84,30 @@ func (a *API) UnregisterWebhook(id string, opts *ManageWebhooksDefinitionOptions
 }
 
 // CreateBot allows to create bot and returns its ID.
-func (a *API) CreateBot(name, avatar string, maxChats uint, defaultPriority GroupPriority, groups []*GroupConfig, ownerClientID, timezone string, workScheduler *WorkScheduler) (string, error) {
-	var resp createBotResponse
-	if err := validateBotGroupsAssignment(groups); err != nil {
+func (a *API) CreateBot(name string, opts *CreateBotRequestOptions) (string, error) {
+	req := createBotRequest{Name: name}
+	if opts != nil {
+		req.CreateBotRequestOptions = *opts
+	}
+
+	if err := validateBotGroupsAssignment(req.Groups); err != nil {
 		return "", err
 	}
-	err := a.Call("create_bot", &createBotRequest{
-		Name:                 name,
-		Avatar:               avatar,
-		MaxChatsCount:        &maxChats,
-		DefaultGroupPriority: defaultPriority,
-		Groups:               groups,
-		OwnerClientID:        ownerClientID,
-		WorkScheduler:        workScheduler,
-		Timezone:             timezone,
-	}, &resp)
-
+	var resp createBotResponse
+	err := a.Call("create_bot", &req, &resp)
 	return resp.BotID, err
 }
 
 // UpdateBot allows to update bot.
-func (a *API) UpdateBot(id, name, avatar string, maxChats uint, defaultPriority GroupPriority, groups []*GroupConfig, timezone string, workScheduler *WorkScheduler) error {
-	if err := validateBotGroupsAssignment(groups); err != nil {
+func (a *API) UpdateBot(id string, opts *UpdateBotRequestOptions) error {
+	req := updateBotRequest{BotID: id}
+	if opts != nil {
+		req.UpdateBotRequestOptions = *opts
+	}
+	if err := validateBotGroupsAssignment(req.Groups); err != nil {
 		return err
 	}
-	return a.Call("update_bot", &updateBotRequest{
-		BotID: id,
-		createBotRequest: &createBotRequest{
-			Name:                 name,
-			Avatar:               avatar,
-			MaxChatsCount:        &maxChats,
-			DefaultGroupPriority: defaultPriority,
-			Groups:               groups,
-			WorkScheduler:        workScheduler,
-			Timezone:             timezone,
-		},
-	}, &emptyResponse{})
+	return a.Call("update_bot", &req, &emptyResponse{})
 }
 
 // DeleteBot deletes bot with given ID.
@@ -273,25 +261,24 @@ func (a *API) ListProperties(ownerClientID string) (map[string]*PropertyConfig, 
 }
 
 // CreateGroup creates new group
-func (a *API) CreateGroup(name, language string, agentPriorities map[string]GroupPriority) (int32, error) {
+func (a *API) CreateGroup(name string, agentPriorities map[string]GroupPriority, opts *CreateGroupRequestOptions) (int32, error) {
+	req := createGroupRequest{Name: name, AgentPriorities: agentPriorities}
+	if opts != nil {
+		req.CreateGroupRequestOptions = *opts
+	}
 	var resp createGroupResponse
-	err := a.Call("create_group", &createGroupRequest{
-		Name:            name,
-		LanguageCode:    language,
-		AgentPriorities: agentPriorities,
-	}, &resp)
+	err := a.Call("create_group", &req, &resp)
 
 	return resp.ID, err
 }
 
 // UpdateGroup updates existing group
-func (a *API) UpdateGroup(id int32, name, language string, agentPriorities map[string]GroupPriority) error {
-	return a.Call("update_group", &updateGroupRequest{
-		ID:              id,
-		Name:            name,
-		LanguageCode:    language,
-		AgentPriorities: agentPriorities,
-	}, &emptyResponse{})
+func (a *API) UpdateGroup(id int32, opts *UpdateGroupRequestOptions) error {
+	req := updateGroupRequest{ID: id}
+	if opts != nil {
+		req.UpdateGroupRequestOptions = *opts
+	}
+	return a.Call("update_group", &req, &emptyResponse{})
 }
 
 // DeleteGroup deletes existing group
@@ -322,7 +309,7 @@ func (a *API) GetGroup(id int, fields ...string) (*Group, error) {
 	return resp, err
 }
 
-func validateBotGroupsAssignment(groups []*GroupConfig) error {
+func validateBotGroupsAssignment(groups []GroupConfig) error {
 	for _, group := range groups {
 		if group.Priority == DoNotAssign {
 			return errors.New("DoNotAssign priority is allowed only as default group priority")
@@ -333,12 +320,13 @@ func validateBotGroupsAssignment(groups []*GroupConfig) error {
 }
 
 // ListLicenseProperties returns the properties set within a license.
-func (a *API) ListLicenseProperties(namespacePrefix, namePrefix string) (Properties, error) {
+func (a *API) ListLicenseProperties(opts *ListLicensePropertiesRequestOptions) (Properties, error) {
+	req := listLicensePropertiesRequest{}
+	if opts != nil {
+		req.ListLicensePropertiesRequestOptions = *opts
+	}
 	var resp Properties
-	err := a.Call("list_license_properties", &listLicensePropertiesRequest{
-		NamespacePrefix: namespacePrefix,
-		NamePrefix:      namePrefix,
-	}, &resp)
+	err := a.Call("list_license_properties", &req, &resp)
 	return resp, err
 }
 
@@ -423,30 +411,22 @@ func (a *API) DeleteGroupProperties(id int, props map[string][]string) error {
 }
 
 // AddAutoAccess creates an auto access data structure.
-func (a *API) AddAutoAccess(groupIDs []int, url, domain *Condition, geolocation *GeolocationCondition, desc, nextID string) (string, error) {
-	var resp addAutoAccessResponse
-	req := addAutoAccessRequest{
-		Description: desc,
-		NextID:      nextID,
+func (a *API) AddAutoAccess(access Access, conditions AutoAccessConditions, opts *AddAutoAccessRequestOptions) (string, error) {
+	req := addAutoAccessRequest{Access: access, Conditions: conditions}
+	if opts != nil {
+		req.AddAutoAccessRequestOptions = *opts
 	}
-	req.Access.Groups = groupIDs
-	req.Conditions.Url = url
-	req.Conditions.Domain = domain
-	req.Conditions.Geolocation = geolocation
+	var resp addAutoAccessResponse
 	err := a.Call("add_auto_access", &req, &resp)
-
 	return resp.ID, err
 }
 
 // UpdateAutoAccess updates an existing auto access.
-func (a *API) UpdateAutoAccess(id string, groupIDs []int, url, domain *Condition, geolocation *GeolocationCondition, desc, nextID string) error {
-	req := updateAutoAccessRequest{}
-	req.Description = desc
-	req.NextID = nextID
-	req.Access.Groups = groupIDs
-	req.Conditions.Url = url
-	req.Conditions.Domain = domain
-	req.Conditions.Geolocation = geolocation
+func (a *API) UpdateAutoAccess(id string, opts *UpdateAutoAccessRequestOptions) error {
+	req := updateAutoAccessRequest{ID: id}
+	if opts != nil {
+		req.UpdateAutoAccessRequestOptions = *opts
+	}
 	return a.Call("update_auto_access", &req, &emptyResponse{})
 }
 
@@ -511,13 +491,13 @@ func (a *API) UpdateTag(name string, groupIDs []int) error {
 }
 
 // Lists properties of groups
-func (a *API) ListGroupsProperties(namespace string, namePrefix string, groupIDs []int) ([]GroupProperties, error) {
+func (a *API) ListGroupsProperties(groupIDs []int, opts *ListGroupsPropertiesRequestOptions) ([]GroupProperties, error) {
+	req := listGroupsPropertiesRequest{GroupIDs: groupIDs}
+	if opts != nil {
+		req.ListGroupsPropertiesRequestOptions = *opts
+	}
 	var resp []GroupProperties
-	err := a.Call("list_groups_properties", &listGroupsPropertiesRequest{
-		GroupIDs:   groupIDs,
-		Namespace:  namespace,
-		NamePrefix: namePrefix,
-	}, &resp)
+	err := a.Call("list_groups_properties", &req, &resp)
 	return resp, err
 }
 

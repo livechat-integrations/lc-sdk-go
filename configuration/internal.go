@@ -16,14 +16,8 @@ type unregisterWebhookRequest struct {
 type listWebhooksResponse []RegisteredWebhook
 
 type createBotRequest struct {
-	Name                 string         `json:"name"`
-	Avatar               string         `json:"avatar_path,omitempty"`
-	DefaultGroupPriority GroupPriority  `json:"default_group_priority,omitempty"`
-	MaxChatsCount        *uint          `json:"max_chats_count,omitempty"`
-	Groups               []*GroupConfig `json:"groups,omitempty"`
-	OwnerClientID        string         `json:"owner_client_id,omitempty"`
-	WorkScheduler        *WorkScheduler `json:"work_scheduler,omitempty"`
-	Timezone             string         `json:"timezone,omitempty"`
+	Name string `json:"name"`
+	CreateBotRequestOptions
 }
 
 type createBotResponse struct {
@@ -36,7 +30,7 @@ type deleteBotRequest struct {
 
 type updateBotRequest struct {
 	BotID string `json:"id"`
-	*createBotRequest
+	UpdateBotRequestOptions
 }
 
 type listBotsRequest struct {
@@ -80,8 +74,7 @@ type getGroupResponse *Group
 type emptyResponse struct{}
 
 type listLicensePropertiesRequest struct {
-	NamespacePrefix string `json:"namespace_prefix,omitempty"`
-	NamePrefix      string `json:"name_prefix,omitempty"`
+	ListLicensePropertiesRequestOptions
 }
 
 type createAgentResponse struct {
@@ -120,8 +113,8 @@ type approveAgentRequest struct {
 
 type createGroupRequest struct {
 	Name            string                   `json:"name"`
-	LanguageCode    string                   `json:"language_code,omitempty"`
 	AgentPriorities map[string]GroupPriority `json:"agent_priorities"`
+	CreateGroupRequestOptions
 }
 
 type createGroupResponse struct {
@@ -129,10 +122,8 @@ type createGroupResponse struct {
 }
 
 type updateGroupRequest struct {
-	ID              int32                    `json:"id"`
-	Name            string                   `json:"name,omitempty"`
-	LanguageCode    string                   `json:"language_code,omitempty"`
-	AgentPriorities map[string]GroupPriority `json:"agent_priorities,omitempty"`
+	ID int32 `json:"id"`
+	UpdateGroupRequestOptions
 }
 
 type deleteGroupRequest struct {
@@ -176,16 +167,9 @@ type deleteGroupPropertiesRequest struct {
 }
 
 type addAutoAccessRequest struct {
-	Access struct {
-		Groups []int `json:"groups"`
-	} `json:"access"`
-	Conditions struct {
-		Url         *Condition            `json:"url,omitempty"`
-		Domain      *Condition            `json:"domain,omitempty"`
-		Geolocation *GeolocationCondition `json:"geolocation,omitempty"`
-	} `json:"conditions"`
-	Description string `json:"description,omitempty"`
-	NextID      string `json:"next_id,omitempty"`
+	Access     Access               `json:"access"`
+	Conditions AutoAccessConditions `json:"conditions"`
+	AddAutoAccessRequestOptions
 }
 
 type addAutoAccessResponse struct {
@@ -193,8 +177,8 @@ type addAutoAccessResponse struct {
 }
 
 type updateAutoAccessRequest struct {
-	addAutoAccessRequest
 	ID string `json:"id"`
+	UpdateAutoAccessRequestOptions
 }
 
 type deleteAutoAccessRequest struct {
@@ -230,9 +214,8 @@ type updateTagRequest struct {
 }
 
 type listGroupsPropertiesRequest struct {
-	GroupIDs   []int  `json:"group_ids,omitempty"`
-	Namespace  string `json:"namespace,omitempty"`
-	NamePrefix string `json:"name_prefix,omitempty"`
+	GroupIDs []int `json:"group_ids"`
+	ListGroupsPropertiesRequestOptions
 }
 
 type reactivateEmailRequest struct {
