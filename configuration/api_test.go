@@ -352,6 +352,7 @@ var mockedResponses = map[string]string{
 		}
 	]`,
 	"reactivate_email": `{}`,
+	"update_company_details": `{}`,
 }
 
 func getMockResponseOK(method string) *http.Response {
@@ -1506,4 +1507,28 @@ func TestReactivateEmail(t *testing.T) {
 	if rErr := api.ReactivateEmail("agent_id"); rErr != nil {
 		t.Errorf("ReactivateEmail failed: %v", rErr)
 	}
+}
+
+func TestUpdateCompanyDetails(t *testing.T) {
+	serverMock := newServerMock(t, "update_company_details")
+	client := NewTestClient(serverMock)
+
+	api, err := configuration.NewAPI(stubTokenGetter, client, "client_id")
+	if err != nil {
+		t.Error("API creation failed")
+	}
+
+	company := "Text"
+	url := ""
+	if rErr := api.UpdateCompanyDetails(
+		configuration.CompanyDetails{
+			Company: &company,
+			URL:     &url,
+		},
+		true,
+	); rErr != nil {
+		t.Errorf("UpdateCompanyDetails failed: %v", rErr)
+	}
+
+	validateRequestBody(t, `{"company":"Text","url":"","enrich":true}`, serverMock.LastRequest.Body)
 }

@@ -322,3 +322,22 @@ type Tag struct {
 	CreatedAt string `json:"created_at"`
 	AuthorID  string `json:"author_id"`
 }
+
+type CompanyDetails struct {
+	InvoiceName  *string `json:"invoice_name,omitempty"`
+	Company      *string `json:"company,omitempty"`
+	Street       *string `json:"street,omitempty"`
+	PostalCode   *string `json:"postal_code,omitempty"`
+	City         *string `json:"city,omitempty"`
+	Country      *string `json:"country,omitempty"`
+	NIP          *string `json:"nip,omitempty"`
+	State        *string `json:"state,omitempty"`
+	Province     *string `json:"province,omitempty"`
+	Phone        *string `json:"phone,omitempty"`
+	URL          *string `json:"url,omitempty"`
+	InvoiceEmail *string `json:"invoice_email,omitempty"`
+	CompanySize  *string `json:"company_size,omitempty"`
+	ChatPurpose  *string `json:"chat_purpose,omitempty"`
+	Audience     *string `json:"audience,omitempty"`
+	Industry     *string `json:"industry,omitempty"`
+}

@@ -221,3 +221,8 @@ type listGroupsPropertiesRequest struct {
 type reactivateEmailRequest struct {
 	AgentID string `json:"agent_id"`
 }
+
+type updateCompanyDetailsRequest struct {
+	CompanyDetails
+	Enrich bool `json:"enrich"`
+}

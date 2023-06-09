@@ -507,3 +507,11 @@ func (a *API) ReactivateEmail(agentID string) error {
 		AgentID: agentID,
 	}, &emptyResponse{})
 }
+
+// Updates company details
+func (a *API) UpdateCompanyDetails(companyDetails CompanyDetails, enrich bool) error {
+	return a.Call("update_company_details", &updateCompanyDetailsRequest{
+		CompanyDetails: companyDetails,
+		Enrich:         enrich,
+	}, &emptyResponse{})
+}
