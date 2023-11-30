@@ -276,6 +276,17 @@ type BotDeleted struct {
 	ID string `json:"id"`
 }
 
+// IncomingTypingIndicator represents payload of incoming_typing_indicator webhook
+type IncomingTypingIndicator struct {
+	ChatID          string `json:"chat_id"`
+	ThreadID        string `json:"thread_id"`
+	TypingIndicator struct {
+		Author    string `json:"author"`
+		Timestamp int    `json:"timestamp"`
+		IsTyping  bool   `json:"is_typing"`
+	} `json:"typing_indicator"`
+}
+
 // UnmarshalJSON implements json.Unmarshaler interface for IncomingChat.
 func (p *IncomingChat) UnmarshalJSON(data []byte) error {
 	type PayloadAlias IncomingChat
