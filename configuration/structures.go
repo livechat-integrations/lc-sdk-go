@@ -103,70 +103,6 @@ type Bot struct {
 	WorkScheduler        *WorkScheduler `json:"work_scheduler,omitempty"`
 }
 
-// BotTemplate represents basic bot template information
-type BotTemplate struct {
-	ID                   string        `json:"id"`
-	Name                 string        `json:"name,omitempty"`
-	Avatar               string        `json:"avatar,omitempty"`
-	MaxChatsCount        uint          `json:"max_chats_count,omitempty"`
-	DefaultGroupPriority GroupPriority `json:"default_group_priority,omitempty"`
-	JobTitle             string        `json:"job_title,omitempty"`
-}
-
-type CreateBotResponse struct {
-	BotID  string `json:"id"`
-	Secret string `json:"secret"`
-}
-
-type ResetBotSecretRequestOptions struct {
-	OwnerClientID string `json:"owner_client_id,omitempty"`
-}
-
-type IssueBotTokenRequest struct {
-	BotID          string `json:"bot_id"`
-	BotSecret      string `json:"bot_secret"`
-	OrganizationID string `json:"organization_id"`
-	ClientID       string `json:"client_id"`
-}
-
-type CreateBotTemplateRequestOptions struct {
-	Avatar                      string        `json:"avatar,omitempty"`
-	MaxChatsCount               *uint         `json:"max_chats_count,omitempty"`
-	DefaultGroupPriority        GroupPriority `json:"default_group_priority,omitempty"`
-	JobTitle                    string        `json:"job_title,omitempty"`
-	OwnerClientID               string        `json:"owner_client_id,omitempty"`
-	AffectExistingInstallations bool          `json:"affect_existing_installations,omitempty"`
-}
-
-type CreateBotTemplateResponse struct {
-	BotTemplateID string `json:"id"`
-	Secret        string `json:"secret"`
-}
-
-type UpdateBotTemplateRequestOptions struct {
-	Name                        string        `json:"name,omitempty"`
-	Avatar                      string        `json:"avatar,omitempty"`
-	MaxChatsCount               *uint         `json:"max_chats_count,omitempty"`
-	DefaultGroupPriority        GroupPriority `json:"default_group_priority,omitempty"`
-	JobTitle                    string        `json:"job_title,omitempty"`
-	OwnerClientID               string        `json:"owner_client_id,omitempty"`
-	AffectExistingInstallations bool          `json:"affect_existing_installations,omitempty"`
-}
-
-type DeleteBotTemplateRequestOptions struct {
-	OwnerClientID               string `json:"owner_client_id,omitempty"`
-	AffectExistingInstallations bool   `json:"affect_existing_installations,omitempty"`
-}
-
-type ListBotTemplatesRequestOptions struct {
-	OwnerClientID string `json:"owner_client_id,omitempty"`
-}
-
-type ResetBotTemplateSecretRequestOptions struct {
-	OwnerClientID               string `json:"owner_client_id,omitempty"`
-	AffectExistingInstallations bool   `json:"affect_existing_installations,omitempty"`
-}
-
 // GroupConfig defines bot's priority and membership in group
 type GroupConfig struct {
 	ID       uint          `json:"id"`
@@ -266,18 +202,11 @@ type ManageWebhooksDefinitionOptions struct {
 	ClientID string
 }
 
-// Conditions represents logic in a given auto access rule
-type Conditions struct {
-	Url         *Condition            `json:"url,omitempty"`
-	Domain      *Condition            `json:"domain,omitempty"`
-	Geolocation *GeolocationCondition `json:"geolocation,omitempty"`
-}
-
 // Condition is option for methods responsible for auto access management:
 // AddAutoAccess, UpdateAutoAccess
 type Condition struct {
-	Values        []Match `json:"values,omitempty"`
-	ExcludeValues []Match `json:"exclude_values,omitempty"`
+	Values        []Match `json:"values"`
+	ExcludeValues []Match `json:"exclude_values"`
 }
 
 // Match represents possible match conditions for Condition
@@ -300,16 +229,18 @@ type GeolocationMatch struct {
 	City        string `json:"city,omitempty"`
 }
 
-type Access struct {
-	Groups []int `json:"groups"`
-}
-
 type AutoAccess struct {
-	ID          string     `json:"id"`
-	Access      Access     `json:"access"`
-	Conditions  Conditions `json:"conditions"`
-	Description string     `json:"description,omitempty"`
-	NextID      string     `json:"next_id,omitempty"`
+	ID     string `json:"id"`
+	Access struct {
+		Groups []int `json:"groups"`
+	} `json:"access"`
+	Conditions struct {
+		Url         *Condition            `json:"url,omitempty"`
+		Domain      *Condition            `json:"domain,omitempty"`
+		Geolocation *GeolocationCondition `json:"geolocation,omitempty"`
+	} `json:"conditions"`
+	Description string `json:"description,omitempty"`
+	NextID      string `json:"next_id,omitempty"`
 }
 
 type PlanLimits []struct {

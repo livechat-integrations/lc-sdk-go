@@ -86,7 +86,6 @@ type userSpecific struct {
 	EmailVerified              json.RawMessage `json:"email_verified"`
 	CreatedAt                  json.RawMessage `json:"created_at"`
 	Visibility                 json.RawMessage `json:"visibility"`
-	Chats                      json.RawMessage `json:"chats"`
 }
 
 // Agent function converts User object to Agent object if User's Type is "agent".
@@ -147,9 +146,6 @@ func (u *User) Customer() *Customer {
 		return nil
 	}
 	if err := json.Unmarshal(u.GroupIDs, &c.GroupIDs); err != nil {
-		return nil
-	}
-	if err := internal.UnmarshalOptionalRawField(u.Chats, &c.Chats); err != nil {
 		return nil
 	}
 	return &c
@@ -295,14 +291,6 @@ type Customer struct {
 	Online                     bool                `json:"online"`
 	State                      string              `json:"state"`
 	GroupIDs                   []int               `json:"group_ids"`
-	Chats                      []*CustomerChat     `json:"chats,omitempty"`
-}
-
-// CustomerChat represents LiveChat customer's chat
-type CustomerChat struct {
-	ChatID              string    `json:"chat_id"`
-	ThreadID            string    `json:"thread_id,omitempty"`
-	LastThreadStartedAt time.Time `json:"last_thread_started_at"`
 }
 
 // Queue represents position of a thread in a queue
@@ -392,7 +380,6 @@ type eventSpecific struct {
 	Text              json.RawMessage `json:"text"`
 	TextVars          json.RawMessage `json:"text_vars"`
 	Fields            json.RawMessage `json:"fields"`
-	FormType          json.RawMessage `json:"form_type"`
 	ContentType       json.RawMessage `json:"content_type"`
 	Name              json.RawMessage `json:"name"`
 	URL               json.RawMessage `json:"url"`
@@ -424,8 +411,12 @@ type Event struct {
 
 // FilledForm represents LiveChat filled form event.
 type FilledForm struct {
-	Fields   []FilledFormField `json:"fields"`
-	FormType string            `json:"form_type"`
+	Fields []struct {
+		ID    string `json:"id"`
+		Label string `json:"label"`
+		Type  string `json:"type"`
+		Value string `json:"value"`
+	} `json:"fields"`
 	Event
 }
 
@@ -441,149 +432,7 @@ func (e *Event) FilledForm() *FilledForm {
 	if err := json.Unmarshal(e.Fields, &f.Fields); err != nil {
 		return nil
 	}
-	if err := internal.UnmarshalOptionalRawField(e.FormType, &f.FormType); err != nil {
-		return nil
-	}
 	return &f
-}
-
-// FilledFormField represents a field in LiveChat filled form event.
-type FilledFormField struct {
-	ID    string `json:"id"`
-	Type  string `json:"type"`
-	Label string `json:"label"`
-	filledFormFieldSpecific
-}
-
-type filledFormFieldSpecific struct {
-	Answer  json.RawMessage `json:"answer,omitempty"`
-	Answers json.RawMessage `json:"answers,omitempty"`
-}
-
-// FilledFormFieldSingle represents a field in LiveChat filled form event with a single answer (e.g. text field).
-type FilledFormFieldSingle struct {
-	FilledFormField
-	Answer string `json:"answer"`
-}
-
-// FilledFormFieldSingleChoice represents a field in LiveChat filled form event with a single choice answer (e.g. radio button).
-type FilledFormFieldSingleChoice struct {
-	FilledFormField
-	Answer struct {
-		ID    string `json:"id"`
-		Label string `json:"label"`
-	} `json:"answer"`
-}
-
-// FilledFormFieldMultiChoice represents a field in LiveChat filled form event with a multiple choice answer (e.g. checkbox).
-type FilledFormFieldMultiChoice struct {
-	FilledFormField
-	Answers []struct {
-		ID    string `json:"id"`
-		Label string `json:"label"`
-	} `json:"answer"`
-}
-
-// FilledFormEmailCheckbox represents a field in LiveChat filled form event with a checkbox for email answer.
-type FilledFormEmailCheckbox struct {
-	FilledFormField
-	Answer bool `json:"answer"`
-}
-
-// FilledFormFieldGroupChooser represents a field in LiveChat filled form event with a group_chooser answer.
-type FilledFormFieldGroupChooser struct {
-	FilledFormField
-	Answer struct {
-		ID      string `json:"id"`
-		Label   string `json:"label"`
-		GroupID int    `json:"group_id"`
-	} `json:"answer"`
-}
-
-// Single method converts FilledFormField object to FilledFormFieldSingle object
-// if FilledFormField's Type is one of "name", "email", "question", "textarea", "subject".
-// If Type is different or FilledFormField is malformed, then it returns nil.
-func (f *FilledFormField) Single() *FilledFormFieldSingle {
-	supportedTypes := map[string]struct{}{
-		"name":     {},
-		"email":    {},
-		"question": {},
-		"textarea": {},
-		"subject":  {},
-	}
-	if _, ok := supportedTypes[f.Type]; !ok {
-		return nil
-	}
-	var s FilledFormFieldSingle
-	s.ID, s.Label = f.ID, f.Label
-	if err := json.Unmarshal(f.Answer, &s.Answer); err != nil {
-		return nil
-	}
-	return &s
-}
-
-// SingleChoice method converts FilledFormField object to FilledFormFieldSingleChoice object
-// if FilledFormField's Type is "radio" or "select".
-// If Type is different or FilledFormField is malformed, then it returns nil.
-func (f *FilledFormField) SingleChoice() *FilledFormFieldSingleChoice {
-	supportedTypes := map[string]struct{}{
-		"radio":  {},
-		"select": {},
-	}
-	if _, ok := supportedTypes[f.Type]; !ok {
-		return nil
-	}
-	var sc FilledFormFieldSingleChoice
-	sc.ID, sc.Label = f.ID, f.Label
-	if err := json.Unmarshal(f.Answer, &sc.Answer); err != nil {
-		return nil
-	}
-	return &sc
-}
-
-// MultiChoice method converts FilledFormField object to FilledFormFieldMultiChoice object
-// if FilledFormField's Type is "checkbox".
-// If Type is different or FilledFormField is malformed, then it returns nil.
-func (f *FilledFormField) MultiChoice() *FilledFormFieldMultiChoice {
-	if f.Type != "checkbox" {
-		return nil
-	}
-	var mc FilledFormFieldMultiChoice
-	mc.ID, mc.Label = f.ID, f.Label
-	if err := json.Unmarshal(f.Answers, &mc.Answers); err != nil {
-		return nil
-	}
-	return &mc
-}
-
-// EmailCheckbox method converts FilledFormField object to FilledFormEmailCheckbox object
-// if FilledFormField's Type is "checkbox_for_email".
-// If Type is different or FilledFormField is malformed, then it returns nil.
-func (f *FilledFormField) EmailCheckbox() *FilledFormEmailCheckbox {
-	if f.Type != "checkbox_for_email" {
-		return nil
-	}
-	var ec FilledFormEmailCheckbox
-	ec.ID, ec.Label = f.ID, f.Label
-	if err := json.Unmarshal(f.Answer, &ec.Answer); err != nil {
-		return nil
-	}
-	return &ec
-}
-
-// GroupChooser method converts FilledFormField object to FilledFormFieldGroupChooser object
-// if FilledFormField's Type is "group_chooser".
-// If Type is different or FilledFormField is malformed, then it returns nil.
-func (f *FilledFormField) GroupChooser() *FilledFormFieldGroupChooser {
-	if f.Type != "group_chooser" {
-		return nil
-	}
-	var gc FilledFormFieldGroupChooser
-	gc.ID, gc.Label = f.ID, f.Label
-	if err := json.Unmarshal(f.Answer, &gc.Answer); err != nil {
-		return nil
-	}
-	return &gc
 }
 
 // Postback represents postback data in LiveChat message event.

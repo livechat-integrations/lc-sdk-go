@@ -26,6 +26,10 @@ type createBotRequest struct {
 	Timezone             string         `json:"timezone,omitempty"`
 }
 
+type createBotResponse struct {
+	BotID string `json:"id"`
+}
+
 type deleteBotRequest struct {
 	BotID string `json:"id"`
 }
@@ -48,49 +52,6 @@ type getBotRequest struct {
 }
 
 type getBotResponse *Bot
-
-type createBotTemplateRequest struct {
-	Name string `json:"name"`
-	CreateBotTemplateRequestOptions
-}
-
-type updateBotTemplateRequest struct {
-	BotTemplateID string `json:"id"`
-	UpdateBotTemplateRequestOptions
-}
-
-type deleteBotTemplateRequest struct {
-	BotTemplateID               string `json:"id"`
-	OwnerClientID               string `json:"owner_client_id,omitempty"`
-	AffectExistingInstallations bool   `json:"affect_existing_installations"`
-}
-
-type listBotTemplatesRequest struct {
-	OwnerClientID string `json:"owner_client_id,omitempty"`
-}
-
-type resetBotSecretRequest struct {
-	BotID         string `json:"id"`
-	OwnerClientID string `json:"owner_client_id,omitempty"`
-}
-
-type resetBotSecretResponse struct {
-	Secret string `json:"secret"`
-}
-
-type issueBotTokenResponse struct {
-	Token string `json:"token"`
-}
-
-type resetBotTemplateSecretRequest struct {
-	BotTemplateID               string `json:"id"`
-	OwnerClientID               string `json:"owner_client_id,omitempty"`
-	AffectExistingInstallations bool   `json:"affect_existing_installations"`
-}
-
-type resetBotTemplateSecretResponse struct {
-	Secret string `json:"secret"`
-}
 
 type unregisterPropertyRequest struct {
 	Name          string `json:"name"`
@@ -119,8 +80,8 @@ type getGroupResponse *Group
 type emptyResponse struct{}
 
 type listLicensePropertiesRequest struct {
-	Namespace  string `json:"namespace,omitempty"`
-	NamePrefix string `json:"name_prefix,omitempty"`
+	NamespacePrefix string `json:"namespace_prefix,omitempty"`
+	NamePrefix      string `json:"name_prefix,omitempty"`
 }
 
 type createAgentResponse struct {
@@ -201,7 +162,7 @@ type updateLicensePropertiesRequest struct {
 }
 
 type updateGroupPropertiesRequest struct {
-	GroupID    int        `json:"group_id"`
+	ID         int        `json:"id"`
 	Properties Properties `json:"properties"`
 }
 
@@ -215,10 +176,16 @@ type deleteGroupPropertiesRequest struct {
 }
 
 type addAutoAccessRequest struct {
-	Access      Access     `json:"access"`
-	Conditions  Conditions `json:"conditions"`
-	Description string     `json:"description"`
-	NextID      string     `json:"next_id"`
+	Access struct {
+		Groups []int `json:"groups"`
+	} `json:"access"`
+	Conditions struct {
+		Url         *Condition            `json:"url,omitempty"`
+		Domain      *Condition            `json:"domain,omitempty"`
+		Geolocation *GeolocationCondition `json:"geolocation,omitempty"`
+	} `json:"conditions"`
+	Description string `json:"description,omitempty"`
+	NextID      string `json:"next_id,omitempty"`
 }
 
 type addAutoAccessResponse struct {
@@ -226,24 +193,23 @@ type addAutoAccessResponse struct {
 }
 
 type updateAutoAccessRequest struct {
-	ID          string      `json:"id"`
-	Access      *Access     `json:"access,omitempty"`
-	Conditions  *Conditions `json:"conditions,omitempty"`
-	Description *string     `json:"description,omitempty"`
-	NextID      *string     `json:"next_id,omitempty"`
+	addAutoAccessRequest
+	ID string `json:"id"`
 }
 
 type deleteAutoAccessRequest struct {
 	ID string `json:"id"`
 }
 
-type listAutoAccessesRequest struct{}
+type listAutoAccessesRequest struct {
+}
 
 type checkProductLimitsForPlanRequest struct {
 	Plan string `json:"plan"`
 }
 
-type listChannelsRequest struct{}
+type listChannelsRequest struct {
+}
 
 type createTagRequest struct {
 	Name     string `json:"name"`

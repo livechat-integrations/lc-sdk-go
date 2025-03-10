@@ -54,8 +54,7 @@ var mockedResponses = map[string]string{
 	]`,
 	"unregister_webhook": `{}`,
 	"create_bot": `{
-		"id": "5c9871d5372c824cbf22d860a707a578",
-		"secret": "laudla991lamda0pnoaa0"
+		"id": "5c9871d5372c824cbf22d860a707a578"
 	}`,
 	"update_bot": `{}`,
 	"delete_bot": `{}`,
@@ -1048,7 +1047,7 @@ func TestUpdateAutoAccessShouldReturnDataReceivedFromConfAPI(t *testing.T) {
 		t.Error("API creation failed")
 	}
 
-	err = api.UpdateAutoAccess("foo", []int{}, nil, nil, nil)
+	err = api.UpdateAutoAccess("foo", []int{}, nil, nil, nil, "", "")
 	if err != nil {
 		t.Errorf("UpdateAutoAccess failed: %v", err)
 	}
